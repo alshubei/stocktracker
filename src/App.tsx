@@ -211,7 +211,7 @@ export default function App() {
   }, [isFullSelection, selectedSymbols]);
 
   return (
-    <div className="app">
+    <div className="mx-auto grid max-w-[1180px] gap-5 px-5 py-6 pb-12 max-sm:px-3.5 max-sm:py-4">
       <TopBar
         capitalEur={capitalEur}
         entryDate={entryDate}
@@ -230,17 +230,21 @@ export default function App() {
       />
 
       {selectedSymbols.length === 0 ? (
-        <div className="banner warn">
+        <div className="rounded-[10px] border border-warn/50 bg-warn/12 px-4 py-3">
           Select at least one ticker to compute the what-if portfolio.
         </div>
       ) : needsFullWeights && !weightsAreValid(weights) ? (
-        <div className="banner warn">
+        <div className="rounded-[10px] border border-warn/50 bg-warn/12 px-4 py-3">
           Weights must sum to 100% (currently {sum.toFixed(2)}%) before P&amp;L
           is computed for the full portfolio.
         </div>
       ) : null}
 
-      {error ? <div className="banner error">{error}</div> : null}
+      {error ? (
+        <div className="rounded-[10px] border border-neg/50 bg-neg/12 px-4 py-3">
+          {error}
+        </div>
+      ) : null}
 
       <PresetStrip
         presets={presets}

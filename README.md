@@ -7,6 +7,7 @@ Local what-if portfolio tracker: pick an entry date and custom weights, then see
 - Node `24.22.2` (see `.nvmrc`)
 - Yarn
 - Vite + React + TypeScript
+- Tailwind CSS v4
 - Express proxy → Yahoo Finance
 
 ## Run

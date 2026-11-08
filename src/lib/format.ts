@@ -34,7 +34,7 @@ export function formatShares(value: number): string {
 }
 
 export function pnlClass(value: number): string {
-  if (value > 0) return "pos";
-  if (value < 0) return "neg";
-  return "flat";
+  if (value > 0) return "text-pos";
+  if (value < 0) return "text-neg";
+  return "text-muted";
 }

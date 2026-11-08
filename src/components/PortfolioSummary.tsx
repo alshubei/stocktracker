@@ -21,58 +21,72 @@ export function PortfolioSummary({
 }: PortfolioSummaryProps) {
   if (!result) {
     return (
-      <section className="summary">
-        <p className="muted">Load market data to see portfolio summary.</p>
+      <section className="panel animate-[rise_0.75s_ease_both]">
+        <p className="m-0 text-muted">
+          Load market data to see portfolio summary.
+        </p>
       </section>
     );
   }
 
   return (
-    <section className="summary">
+    <section className="panel animate-[rise_0.75s_ease_both]">
       {focusLabel ? (
-        <p className="summary-focus-label">Focused: {focusLabel}</p>
+        <p className="mb-3 text-sm font-semibold text-accent">
+          Focused: {focusLabel}
+        </p>
       ) : null}
-      <div className="summary-stats">
+      <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
         <div>
-          <span className="stat-label">Current value</span>
-          <strong>{formatEur(result.totalValueEur)}</strong>
-          <span className="secondary">{formatUsd(result.totalValueUsd)}</span>
+          <span className="mb-1 block text-sm text-muted">Current value</span>
+          <strong className="block text-[1.35rem]">
+            {formatEur(result.totalValueEur)}
+          </strong>
+          <span className="text-sm text-muted">
+            {formatUsd(result.totalValueUsd)}
+          </span>
         </div>
         <div>
-          <span className="stat-label">P&amp;L since entry</span>
-          <strong className={pnlClass(result.totalPnlEur)}>
+          <span className="mb-1 block text-sm text-muted">
+            P&amp;L since entry
+          </span>
+          <strong
+            className={`block text-[1.35rem] ${pnlClass(result.totalPnlEur)}`}
+          >
             {formatEur(result.totalPnlEur)}
           </strong>
-          <span className={`secondary ${pnlClass(result.totalPnlPercent)}`}>
+          <span className={`text-sm ${pnlClass(result.totalPnlPercent)}`}>
             {formatPct(result.totalPnlPercent)}
           </span>
         </div>
         <div>
-          <span className="stat-label">FX EURUSD</span>
-          <strong>{result.latestFx.toFixed(4)}</strong>
-          <span className="secondary">
+          <span className="mb-1 block text-sm text-muted">FX EURUSD</span>
+          <strong className="block text-[1.35rem]">
+            {result.latestFx.toFixed(4)}
+          </strong>
+          <span className="text-sm text-muted">
             entry {result.entryFx.toFixed(4)}
           </span>
         </div>
       </div>
 
-      <div className="chart-wrap">
+      <div className="min-h-[260px] w-full">
         <ResponsiveContainer width="100%" height={260}>
           <AreaChart data={result.valueSeries}>
             <defs>
               <linearGradient id="valueFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0.02} />
+                <stop offset="0%" stopColor="#3dba8a" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#3dba8a" stopOpacity={0.02} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="var(--grid)" vertical={false} />
+            <CartesianGrid stroke="#2a3831" vertical={false} />
             <XAxis
               dataKey="date"
-              tick={{ fill: "var(--muted)", fontSize: 12 }}
+              tick={{ fill: "#93a59b", fontSize: 12 }}
               minTickGap={40}
             />
             <YAxis
-              tick={{ fill: "var(--muted)", fontSize: 12 }}
+              tick={{ fill: "#93a59b", fontSize: 12 }}
               width={72}
               tickFormatter={(v: number) =>
                 new Intl.NumberFormat("de-DE", {
@@ -84,15 +98,16 @@ export function PortfolioSummary({
             <Tooltip
               formatter={(value: number) => [formatEur(value), "Value"]}
               contentStyle={{
-                background: "var(--panel)",
-                border: "1px solid var(--border)",
+                background: "#1b2621",
+                border: "1px solid #2d3c35",
                 borderRadius: 8,
+                color: "#e8f0eb",
               }}
             />
             <Area
               type="monotone"
               dataKey="valueEur"
-              stroke="var(--accent)"
+              stroke="#3dba8a"
               fill="url(#valueFill)"
               strokeWidth={2}
               isAnimationActive
