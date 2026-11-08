@@ -1,6 +1,9 @@
+export type InstrumentKind = "stock" | "etf";
+
 export type Ticker = {
   symbol: string;
   name: string;
+  kind: InstrumentKind;
 };
 
 export type PresetScenario = {
@@ -11,15 +14,23 @@ export type PresetScenario = {
 };
 
 export const UNIVERSE: Ticker[] = [
-  { symbol: "NVDA", name: "NVIDIA" },
-  { symbol: "DTCR", name: "Global X Data Center & Digital Infrastructure ETF" },
-  { symbol: "SPUS", name: "SP Funds S&P 500 Sharia ETF" },
-  { symbol: "CIBR", name: "First Trust NASDAQ Cybersecurity ETF" },
-  { symbol: "AVGO", name: "Broadcom" },
-  { symbol: "NOW", name: "ServiceNow" },
-  { symbol: "SNDK", name: "SanDisk" },
+  { symbol: "NVDA", name: "NVIDIA", kind: "stock" },
+  {
+    symbol: "DTCR",
+    name: "Global X Data Center & Digital Infrastructure ETF",
+    kind: "etf",
+  },
+  { symbol: "SPUS", name: "SP Funds S&P 500 Sharia ETF", kind: "etf" },
+  {
+    symbol: "CIBR",
+    name: "First Trust NASDAQ Cybersecurity ETF",
+    kind: "etf",
+  },
+  { symbol: "AVGO", name: "Broadcom", kind: "stock" },
+  { symbol: "NOW", name: "ServiceNow", kind: "stock" },
+  { symbol: "SNDK", name: "SanDisk", kind: "stock" },
   // Nasdaq listing; Yahoo history starts mid-2026 — earlier entries use first available close.
-  { symbol: "SKHY", name: "SK Hynix" },
+  { symbol: "SKHY", name: "SK Hynix", kind: "stock" },
 ];
 
 export const DEFAULT_CAPITAL_EUR = 10_000;
@@ -60,4 +71,18 @@ export function resolvePresetDate(
   todayIso: string = new Date().toISOString().slice(0, 10),
 ): string {
   return entryDate === "today" ? todayIso : entryDate;
+}
+
+export function findTicker(symbol: string): Ticker | undefined {
+  return UNIVERSE.find((t) => t.symbol === symbol);
+}
+
+export function matchesTickerQuery(ticker: Ticker, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  return (
+    ticker.symbol.toLowerCase().includes(q) ||
+    ticker.name.toLowerCase().includes(q) ||
+    ticker.kind.includes(q)
+  );
 }

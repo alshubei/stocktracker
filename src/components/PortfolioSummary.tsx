@@ -12,9 +12,13 @@ import { formatEur, formatPct, formatUsd, pnlClass } from "../lib/format.ts";
 
 type PortfolioSummaryProps = {
   result: PortfolioResult | null;
+  focusLabel?: string | null;
 };
 
-export function PortfolioSummary({ result }: PortfolioSummaryProps) {
+export function PortfolioSummary({
+  result,
+  focusLabel = null,
+}: PortfolioSummaryProps) {
   if (!result) {
     return (
       <section className="summary">
@@ -25,6 +29,9 @@ export function PortfolioSummary({ result }: PortfolioSummaryProps) {
 
   return (
     <section className="summary">
+      {focusLabel ? (
+        <p className="summary-focus-label">Focused: {focusLabel}</p>
+      ) : null}
       <div className="summary-stats">
         <div>
           <span className="stat-label">Current value</span>
