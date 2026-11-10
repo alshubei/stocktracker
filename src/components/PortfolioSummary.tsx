@@ -31,7 +31,6 @@ export type ChartSeriesModel = CompareSeriesMeta & {
 
 type PortfolioSummaryProps = {
   result: PortfolioResult | null;
-  focusLabel?: string | null;
   /** When non-empty, chart overlays what-if + snapshots. */
   compareSeries?: ChartSeriesModel[];
   compareData?: Array<Record<string, string | number>>;
@@ -39,7 +38,6 @@ type PortfolioSummaryProps = {
 
 export function PortfolioSummary({
   result,
-  focusLabel = null,
   compareSeries = [],
   compareData = [],
 }: PortfolioSummaryProps) {
@@ -60,11 +58,6 @@ export function PortfolioSummary({
 
   return (
     <section className="panel animate-[rise_0.75s_ease_both]">
-      {focusLabel ? (
-        <p className="mb-3 text-sm font-semibold text-accent">
-          Focused: {focusLabel}
-        </p>
-      ) : null}
       <div className="mb-4">
         <div className="mx-auto grid max-w-xl grid-cols-2 gap-6">
           <div>

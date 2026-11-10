@@ -5,6 +5,7 @@ import { SnapshotsPanel } from "./components/SnapshotsPanel.tsx";
 import { TickerFocus } from "./components/TickerFocus.tsx";
 import { SiteFooter } from "./components/SiteFooter.tsx";
 import { TopBar } from "./components/TopBar.tsx";
+import { WhatIfResultBar } from "./components/WhatIfResultBar.tsx";
 import { UNIVERSE, equalWeights, findTicker } from "./config/universe.ts";
 import { fetchUniverseSeries } from "./lib/api.ts";
 import {
@@ -287,7 +288,7 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto grid max-w-[1180px] gap-5 px-5 py-6 pb-12 max-sm:px-3.5 max-sm:py-4">
+    <div className="mx-auto grid max-w-[1180px] gap-5 px-5 py-6 pb-28 max-sm:px-3.5 max-sm:py-4 max-sm:pb-32">
       <TopBar
         capitalEur={capitalEur}
         entryDate={entryDate}
@@ -334,7 +335,6 @@ export default function App() {
 
       <PortfolioSummary
         result={activeResult}
-        focusLabel={focusLabel}
         compareSeries={compareSeries}
         compareData={compareData}
       />
@@ -358,6 +358,10 @@ export default function App() {
       />
 
       <SiteFooter />
+
+      {activeResult ? (
+        <WhatIfResultBar result={activeResult} focusLabel={focusLabel} />
+      ) : null}
     </div>
   );
 }
