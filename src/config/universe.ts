@@ -6,13 +6,6 @@ export type Ticker = {
   kind: InstrumentKind;
 };
 
-export type PresetScenario = {
-  id: string;
-  label: string;
-  /** YYYY-MM-DD; use "today" for dynamic latest market day */
-  entryDate: string;
-};
-
 export const UNIVERSE: Ticker[] = [
   { symbol: "NVDA", name: "NVIDIA", kind: "stock" },
   {
@@ -52,25 +45,6 @@ export function equalWeights(
     }
   });
   return weights;
-}
-
-/**
- * Named entry scenarios for side-by-side comparison.
- * Dates approximate recent US tariff / collection-driven drawdowns;
- * edit freely in this file.
- */
-export const PRESET_SCENARIOS: PresetScenario[] = [
-  { id: "pre-crash", label: "Pre-crash", entryDate: "2025-02-14" },
-  { id: "dip", label: "Dip", entryDate: "2025-04-07" },
-  { id: "rebound", label: "Rebound", entryDate: "2025-05-01" },
-  { id: "today", label: "Today", entryDate: "today" },
-];
-
-export function resolvePresetDate(
-  entryDate: string,
-  todayIso: string = new Date().toISOString().slice(0, 10),
-): string {
-  return entryDate === "today" ? todayIso : entryDate;
 }
 
 export function findTicker(symbol: string): Ticker | undefined {

@@ -1,20 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PortfolioSummary } from "./components/PortfolioSummary.tsx";
-import {
-  PresetStrip,
-  type PresetCardModel,
-} from "./components/PresetStrip.tsx";
 import { PositionsTable } from "./components/PositionsTable.tsx";
+import { SnapshotsPanel } from "./components/SnapshotsPanel.tsx";
 import { TickerFocus } from "./components/TickerFocus.tsx";
 import { SiteFooter } from "./components/SiteFooter.tsx";
 import { TopBar } from "./components/TopBar.tsx";
-import {
-  PRESET_SCENARIOS,
-  UNIVERSE,
-  equalWeights,
-  findTicker,
-  resolvePresetDate,
-} from "./config/universe.ts";
+import { UNIVERSE, equalWeights, findTicker } from "./config/universe.ts";
 import { fetchUniverseSeries } from "./lib/api.ts";
 import {
   computePortfolio,
@@ -23,6 +14,16 @@ import {
   weightSum,
   weightsAreValid,
 } from "./lib/portfolio.ts";
+import {
+  WHAT_IF_COLOR,
+  WHAT_IF_SERIES_ID,
+  addSnapshot,
+  canSaveSnapshot,
+  mergeSeries,
+  removeSnapshot,
+  snapshotColor,
+  type PortfolioSnapshot,
+} from "./lib/snapshots.ts";
 import { loadConfig, saveConfig, todayIso } from "./lib/storage.ts";
 
 type MarketBundle = {
@@ -33,11 +34,15 @@ type MarketBundle = {
   fetchedTo: string;
 };
 
-function earliestNeededDate(activeEntry: string): string {
-  const presetDates = PRESET_SCENARIOS.map((p) =>
-    resolvePresetDate(p.entryDate),
-  );
-  return [activeEntry, ...presetDates].sort()[0]!;
+type PortfolioInputs = {
+  capitalEur: number;
+  entryDate: string;
+  weights: Record<string, number>;
+  selectedSymbols: string[];
+};
+
+function earliestNeededDate(dates: string[]): string {
+  return [...dates].sort()[0]!;
 }
 
 /** Keep relative weights among selected symbols; rescale to 100%. */
@@ -66,6 +71,21 @@ function positionsForSelection(
   }));
 }
 
+function selectionIsFull(selectedSymbols: string[]): boolean {
+  return (
+    selectedSymbols.length === UNIVERSE.length &&
+    UNIVERSE.every((t) => selectedSymbols.includes(t.symbol))
+  );
+}
+
+function inputsAreWeightValid(input: PortfolioInputs): boolean {
+  if (input.selectedSymbols.length === 0) return false;
+  if (selectionIsFull(input.selectedSymbols)) {
+    return weightsAreValid(input.weights);
+  }
+  return true;
+}
+
 export default function App() {
   const initial = useMemo(() => loadConfig(), []);
   const [capitalEur, setCapitalEur] = useState(initial.capitalEur);
@@ -74,20 +94,34 @@ export default function App() {
   const [selectedSymbols, setSelectedSymbols] = useState<string[]>(
     initial.selectedSymbols,
   );
+  const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>(
+    initial.snapshots,
+  );
+  const [snapshotName, setSnapshotName] = useState("");
   const [market, setMarket] = useState<MarketBundle | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [asOfDate, setAsOfDate] = useState(todayIso());
 
   useEffect(() => {
-    saveConfig({ capitalEur, weights, entryDate, selectedSymbols });
-  }, [capitalEur, weights, entryDate, selectedSymbols]);
+    saveConfig({
+      capitalEur,
+      weights,
+      entryDate,
+      selectedSymbols,
+      snapshots,
+    });
+  }, [capitalEur, weights, entryDate, selectedSymbols, snapshots]);
 
-  const loadMarket = useCallback(async (activeEntry: string) => {
+  const fetchFromKey = useMemo(() => {
+    const dates = [entryDate, ...snapshots.map((s) => s.entryDate)];
+    return earliestNeededDate(dates);
+  }, [entryDate, snapshots]);
+
+  const loadMarket = useCallback(async (from: string) => {
     setLoading(true);
     setError(null);
     const to = todayIso();
-    const from = earliestNeededDate(activeEntry);
     try {
       const data = await fetchUniverseSeries(
         UNIVERSE.map((t) => t.symbol),
@@ -111,16 +145,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    void loadMarket(entryDate);
-  }, [loadMarket, entryDate]);
-
-  const isFullSelection =
-    selectedSymbols.length === UNIVERSE.length &&
-    UNIVERSE.every((t) => selectedSymbols.includes(t.symbol));
+    void loadMarket(fetchFromKey);
+  }, [loadMarket, fetchFromKey]);
 
   const buildResult = useCallback(
-    (forEntryDate: string): PortfolioResult | null => {
-      if (!market || selectedSymbols.length === 0) return null;
+    (input: PortfolioInputs): PortfolioResult | null => {
+      if (!market || input.selectedSymbols.length === 0) return null;
+      if (!inputsAreWeightValid(input)) return null;
 
       const priced = new Set(
         Object.entries(market.priceSeriesBySymbol)
@@ -128,79 +159,101 @@ export default function App() {
           .map(([symbol]) => symbol),
       );
 
-      if (isFullSelection) {
-        if (!weightsAreValid(weights)) return null;
-        const positions = positionsForSelection(
-          selectedSymbols,
-          weights,
-          priced,
-        );
-        if (!positions) return null;
-        return computePortfolio({
-          capitalEur,
-          entryDate: forEntryDate,
-          asOfDate,
-          positions,
-          priceSeriesBySymbol: market.priceSeriesBySymbol,
-          fxSeries: market.fxSeries,
-        });
-      }
-
       const positions = positionsForSelection(
-        selectedSymbols,
-        weights,
+        input.selectedSymbols,
+        input.weights,
         priced,
       );
       if (!positions) return null;
 
       return computePortfolio({
-        capitalEur,
-        entryDate: forEntryDate,
+        capitalEur: input.capitalEur,
+        entryDate: input.entryDate,
         asOfDate,
         positions,
         priceSeriesBySymbol: market.priceSeriesBySymbol,
         fxSeries: market.fxSeries,
       });
     },
-    [market, weights, capitalEur, asOfDate, selectedSymbols, isFullSelection],
+    [market, asOfDate],
+  );
+
+  const liveInput = useMemo<PortfolioInputs>(
+    () => ({ capitalEur, entryDate, weights, selectedSymbols }),
+    [capitalEur, entryDate, weights, selectedSymbols],
   );
 
   const activeResult = useMemo(() => {
     try {
-      return buildResult(entryDate);
+      return buildResult(liveInput);
     } catch {
       return null;
     }
-  }, [buildResult, entryDate]);
+  }, [buildResult, liveInput]);
 
-  const presets: PresetCardModel[] = useMemo(() => {
-    return PRESET_SCENARIOS.map((preset) => {
-      const date = resolvePresetDate(preset.entryDate, asOfDate);
+  const snapshotRows = useMemo(() => {
+    return snapshots.map((snapshot, index) => {
+      let result: PortfolioResult | null = null;
       try {
-        return {
-          id: preset.id,
-          label: preset.label,
-          entryDate: date,
-          result: buildResult(date),
-          error: null,
-        };
-      } catch (err) {
-        return {
-          id: preset.id,
-          label: preset.label,
-          entryDate: date,
-          result: null,
-          error: err instanceof Error ? err.message : "Unavailable",
-        };
+        result = buildResult(snapshot);
+      } catch {
+        result = null;
       }
+      return {
+        snapshot,
+        index,
+        valueEur: result?.totalValueEur ?? null,
+        pnlPercent: result?.totalPnlPercent ?? null,
+        result,
+      };
     });
-  }, [buildResult, asOfDate]);
+  }, [snapshots, buildResult]);
+
+  const compareSeries = useMemo(() => {
+    if (snapshots.length === 0) return [];
+    return [
+      {
+        id: WHAT_IF_SERIES_ID,
+        label: "What-if",
+        color: WHAT_IF_COLOR,
+        result: activeResult,
+      },
+      ...snapshotRows.map((row) => ({
+        id: row.snapshot.id,
+        label: row.snapshot.name,
+        color: snapshotColor(row.index),
+        result: row.result,
+      })),
+    ];
+  }, [snapshots.length, activeResult, snapshotRows]);
+
+  const compareData = useMemo(() => {
+    if (compareSeries.length === 0) return [];
+    return mergeSeries(
+      compareSeries
+        .filter((s) => s.result)
+        .map((s) => ({
+          id: s.id,
+          points: s.result!.valueSeries.map((p) => ({
+            date: p.date,
+            valueEur: p.valueEur,
+          })),
+        })),
+    );
+  }, [compareSeries]);
 
   const sum = weightSum(weights);
+  const isFullSelection = selectionIsFull(selectedSymbols);
   const needsFullWeights = isFullSelection || selectedSymbols.length === 0;
-  const valid =
-    selectedSymbols.length > 0 &&
-    (!needsFullWeights || weightsAreValid(weights));
+  const valid = inputsAreWeightValid(liveInput);
+
+  const saveAllowed = canSaveSnapshot({
+    name: snapshotName,
+    capitalEur,
+    entryDate,
+    selectedSymbols,
+    weightsValid: valid,
+  });
 
   const focusLabel = useMemo(() => {
     if (isFullSelection || selectedSymbols.length === 0) return null;
@@ -210,6 +263,29 @@ export default function App() {
     }
     return `${selectedSymbols.length} tickers selected`;
   }, [isFullSelection, selectedSymbols]);
+
+  function handleSaveSnapshot() {
+    const next = addSnapshot(snapshots, {
+      name: snapshotName,
+      capitalEur,
+      entryDate,
+      weights,
+      selectedSymbols,
+    });
+    if (!next) return;
+    setSnapshots(next);
+    setSnapshotName("");
+  }
+
+  function handleLoadSnapshot(id: string) {
+    const snap = snapshots.find((s) => s.id === id);
+    if (!snap) return;
+    setCapitalEur(snap.capitalEur);
+    setEntryDate(snap.entryDate);
+    setWeights({ ...snap.weights });
+    setSelectedSymbols([...snap.selectedSymbols]);
+    setSnapshotName(snap.name);
+  }
 
   return (
     <div className="mx-auto grid max-w-[1180px] gap-5 px-5 py-6 pb-12 max-sm:px-3.5 max-sm:py-4">
@@ -221,7 +297,7 @@ export default function App() {
           if (Number.isFinite(value) && value > 0) setCapitalEur(value);
         }}
         onEntryDateChange={setEntryDate}
-        onRefresh={() => void loadMarket(entryDate)}
+        onRefresh={() => void loadMarket(fetchFromKey)}
       />
 
       <TickerFocus
@@ -247,13 +323,22 @@ export default function App() {
         </div>
       ) : null}
 
-      <PresetStrip
-        presets={presets}
-        activeEntryDate={entryDate}
-        onSelect={setEntryDate}
+      <SnapshotsPanel
+        name={snapshotName}
+        onNameChange={setSnapshotName}
+        canSave={saveAllowed}
+        onSave={handleSaveSnapshot}
+        rows={snapshotRows}
+        onRemove={(id) => setSnapshots((prev) => removeSnapshot(prev, id))}
+        onLoad={handleLoadSnapshot}
       />
 
-      <PortfolioSummary result={activeResult} focusLabel={focusLabel} />
+      <PortfolioSummary
+        result={activeResult}
+        focusLabel={focusLabel}
+        compareSeries={compareSeries}
+        compareData={compareData}
+      />
 
       <PositionsTable
         universe={UNIVERSE}

@@ -124,8 +124,8 @@ export function TickerFocus({
         <p className="m-0 rounded-lg border border-accent/35 bg-accent/12 px-3.5 py-2.5 text-[0.92rem]">
           Concentrating on{" "}
           <strong>{selectedTickers.map((t) => t.symbol).join(", ")}</strong>{" "}
-          ({selectedTickers.length}/{universe.length}) — summary, presets, and
-          chart use full capital across this selection.
+          ({selectedTickers.length}/{universe.length}) — summary and chart use
+          full capital across this selection.
         </p>
       ) : null}
     </section>

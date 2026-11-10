@@ -32,4 +32,4 @@ yarn dev
 
 ## Config
 
-Edit `src/config/universe.ts` for tickers, default weights, and preset entry scenarios.
+Edit `src/config/universe.ts` for tickers and default weights.

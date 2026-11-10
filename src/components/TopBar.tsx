@@ -22,8 +22,8 @@ export function TopBar({
           Stocktracker
         </h1>
         <p className="m-0 text-sm leading-snug text-muted">
-          Set capital and an entry date to see what a virtual buy would be worth
-          now.
+          Live what-if: set capital and entry date. Save a snapshot below to
+          lock a portfolio and compare it on the chart.
         </p>
       </div>
       <div className="flex flex-wrap items-end gap-3">

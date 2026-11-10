@@ -3,9 +3,13 @@ import {
   UNIVERSE,
   equalWeights,
 } from "../config/universe.ts";
+import {
+  MAX_SNAPSHOTS,
+  type PortfolioSnapshot,
+} from "./snapshots.ts";
 
 const STORAGE_KEY = "stocktracker:v1";
-const STORAGE_VERSION = 2;
+const STORAGE_VERSION = 3;
 
 export type StoredConfig = {
   capitalEur: number;
@@ -13,6 +17,8 @@ export type StoredConfig = {
   entryDate: string;
   /** Selected symbols for concentration; empty means none selected. */
   selectedSymbols: string[];
+  /** Frozen portfolios for chart comparison (local until accounts exist). */
+  snapshots: PortfolioSnapshot[];
   /** Bumps when defaults that should migrate change. */
   version?: number;
 };
@@ -47,8 +53,68 @@ export function defaultConfig(): StoredConfig {
     weights: equalWeights(),
     entryDate: defaultEntryDate(),
     selectedSymbols: allSymbols(),
+    snapshots: [],
     version: STORAGE_VERSION,
   };
+}
+
+function isIsoDate(value: unknown): value is string {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function sanitizeSnapshots(raw: unknown): PortfolioSnapshot[] {
+  if (!Array.isArray(raw)) return [];
+  const allowed = new Set(allSymbols());
+  const out: PortfolioSnapshot[] = [];
+
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Partial<PortfolioSnapshot>;
+    const id = typeof row.id === "string" && row.id ? row.id : null;
+    const name = typeof row.name === "string" ? row.name.trim() : "";
+    const capitalEur =
+      typeof row.capitalEur === "number" && row.capitalEur > 0
+        ? row.capitalEur
+        : null;
+    const entryDate = isIsoDate(row.entryDate) ? row.entryDate : null;
+    const savedAt =
+      typeof row.savedAt === "string" && row.savedAt
+        ? row.savedAt
+        : new Date().toISOString();
+    if (!id || !name || capitalEur == null || !entryDate) continue;
+
+    const selectedSymbols = Array.isArray(row.selectedSymbols)
+      ? [...new Set(row.selectedSymbols.filter(
+          (s): s is string => typeof s === "string" && allowed.has(s),
+        ))]
+      : [];
+    if (selectedSymbols.length === 0) continue;
+
+    const weights: Record<string, number> = {};
+    if (row.weights && typeof row.weights === "object") {
+      for (const [symbol, weight] of Object.entries(row.weights)) {
+        if (allowed.has(symbol) && typeof weight === "number") {
+          weights[symbol] = weight;
+        }
+      }
+    }
+    for (const symbol of selectedSymbols) {
+      if (weights[symbol] == null) weights[symbol] = 0;
+    }
+
+    out.push({
+      id,
+      name,
+      savedAt,
+      capitalEur,
+      entryDate,
+      weights,
+      selectedSymbols,
+    });
+    if (out.length >= MAX_SNAPSHOTS) break;
+  }
+
+  return out;
 }
 
 function sanitizeSelected(symbols: unknown): string[] {
@@ -87,12 +153,12 @@ export function loadConfig(): StoredConfig {
 
     const storedVersion =
       typeof parsed.version === "number" ? parsed.version : 0;
-    const shouldRefreshEntryDate = storedVersion < STORAGE_VERSION;
+    // One-time migration from pre-v2 hardcoded default entry dates.
+    const shouldRefreshEntryDate = storedVersion < 2;
 
     const entryDate = shouldRefreshEntryDate
       ? defaults.entryDate
-      : typeof parsed.entryDate === "string" &&
-          /^\d{4}-\d{2}-\d{2}$/.test(parsed.entryDate)
+      : isIsoDate(parsed.entryDate)
         ? parsed.entryDate
         : defaults.entryDate;
 
@@ -104,6 +170,7 @@ export function loadConfig(): StoredConfig {
       weights,
       entryDate,
       selectedSymbols,
+      snapshots: sanitizeSnapshots(parsed.snapshots),
       version: STORAGE_VERSION,
     };
   } catch {
