@@ -6,6 +6,7 @@ import {
   canSaveSnapshot,
   mergeSeries,
   removeSnapshot,
+  snapshotPortfolioReady,
 } from "./snapshots.ts";
 
 const baseDraft = {
@@ -18,44 +19,21 @@ const baseDraft = {
 
 describe("snapshots", () => {
   it("requires name, capital, date, tickers, and valid weights flag", () => {
+    const portfolio = {
+      capitalEur: 1000,
+      entryDate: "2026-11-05",
+      selectedSymbols: ["NVDA"],
+      weightsValid: true,
+    };
+    assert.equal(snapshotPortfolioReady(portfolio), true);
+    assert.equal(canSaveSnapshot({ name: "x", ...portfolio }), true);
+    assert.equal(canSaveSnapshot({ name: "  ", ...portfolio }), false);
     assert.equal(
-      canSaveSnapshot({
-        name: "x",
-        capitalEur: 1000,
-        entryDate: "2026-11-05",
-        selectedSymbols: ["NVDA"],
-        weightsValid: true,
-      }),
-      true,
-    );
-    assert.equal(
-      canSaveSnapshot({
-        name: "  ",
-        capitalEur: 1000,
-        entryDate: "2026-11-05",
-        selectedSymbols: ["NVDA"],
-        weightsValid: true,
-      }),
+      snapshotPortfolioReady({ ...portfolio, selectedSymbols: [] }),
       false,
     );
     assert.equal(
-      canSaveSnapshot({
-        name: "x",
-        capitalEur: 1000,
-        entryDate: "2026-11-05",
-        selectedSymbols: [],
-        weightsValid: true,
-      }),
-      false,
-    );
-    assert.equal(
-      canSaveSnapshot({
-        name: "x",
-        capitalEur: 1000,
-        entryDate: "2026-11-05",
-        selectedSymbols: ["NVDA"],
-        weightsValid: false,
-      }),
+      canSaveSnapshot({ name: "x", ...portfolio, weightsValid: false }),
       false,
     );
   });

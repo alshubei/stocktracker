@@ -18,8 +18,8 @@ import {
   WHAT_IF_COLOR,
   WHAT_IF_SERIES_ID,
   addSnapshot,
-  canSaveSnapshot,
   mergeSeries,
+  snapshotPortfolioReady,
   removeSnapshot,
   snapshotColor,
   type PortfolioSnapshot,
@@ -247,8 +247,7 @@ export default function App() {
   const needsFullWeights = isFullSelection || selectedSymbols.length === 0;
   const valid = inputsAreWeightValid(liveInput);
 
-  const saveAllowed = canSaveSnapshot({
-    name: snapshotName,
+  const portfolioReady = snapshotPortfolioReady({
     capitalEur,
     entryDate,
     selectedSymbols,
@@ -326,7 +325,7 @@ export default function App() {
       <SnapshotsPanel
         name={snapshotName}
         onNameChange={setSnapshotName}
-        canSave={saveAllowed}
+        portfolioReady={portfolioReady}
         onSave={handleSaveSnapshot}
         rows={snapshotRows}
         onRemove={(id) => setSnapshots((prev) => removeSnapshot(prev, id))}

@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import {
   MAX_SNAPSHOTS,
   snapshotColor,
@@ -15,23 +16,64 @@ type SnapshotRow = {
 type SnapshotsPanelProps = {
   name: string;
   onNameChange: (name: string) => void;
-  canSave: boolean;
+  /** Portfolio inputs are valid (name validated in the panel). */
+  portfolioReady: boolean;
   onSave: () => void;
   rows: SnapshotRow[];
   onRemove: (id: string) => void;
   onLoad: (id: string) => void;
 };
 
+const SNAPSHOT_HINT =
+  "Save a named portfolio (capital, entry date, tickers, weights). It stays fixed; the form above stays a live what-if. With at least one snapshot, the chart compares those locked curves to today against your current what-if.";
+
+function InfoIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+
 export function SnapshotsPanel({
   name,
   onNameChange,
-  canSave,
+  portfolioReady,
   onSave,
   rows,
   onRemove,
   onLoad,
 }: SnapshotsPanelProps) {
   const atMax = rows.length >= MAX_SNAPSHOTS;
+  const [hintOpen, setHintOpen] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const hintId = useId();
+  const nameErrorId = useId();
+
+  function handleNameChange(value: string) {
+    onNameChange(value);
+    if (nameError && value.trim()) setNameError(null);
+  }
+
+  function handleSaveClick() {
+    if (!name.trim()) {
+      setNameError("Write a name for this snapshot.");
+      return;
+    }
+    setNameError(null);
+    onSave();
+  }
 
   return (
     <section
@@ -39,43 +81,72 @@ export function SnapshotsPanel({
       aria-label="Snapshots"
     >
       <div>
-        <h2 className="m-0 font-serif text-xl font-semibold">Snapshots</h2>
-        <p className="mt-1 mb-0 max-w-2xl text-sm text-muted">
-          Save a named portfolio (capital, entry date, tickers, weights). It
-          stays fixed; the form above stays a live what-if. With at least one
-          snapshot, the chart compares those locked curves to today against your
-          current what-if.
-        </p>
+        <div className="flex items-center gap-1.5">
+          <h2 className="m-0 font-serif text-xl font-semibold">Snapshots</h2>
+          <button
+            type="button"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-bg0 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-expanded={hintOpen}
+            aria-controls={hintId}
+            onClick={() => setHintOpen((open) => !open)}
+          >
+            <InfoIcon className="size-4" />
+            <span className="sr-only">
+              {hintOpen ? "Hide snapshot help" : "Show snapshot help"}
+            </span>
+          </button>
+        </div>
+        <p className="sr-only">{SNAPSHOT_HINT}</p>
+        <div
+          id={hintId}
+          aria-hidden
+          className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+            hintOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          }`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <p className="mt-2 mb-0 max-w-2xl text-sm text-muted">
+              {SNAPSHOT_HINT}
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="field min-w-[14rem] flex-1">
           Snapshot name
           <input
-            className="field-input w-full"
+            className={`field-input w-full ${nameError ? "border-neg" : ""}`}
             type="text"
             value={name}
             maxLength={48}
             placeholder="e.g. April dip, NVDA-heavy"
-            onChange={(e) => onNameChange(e.target.value)}
+            aria-invalid={nameError ? true : undefined}
+            aria-describedby={nameError ? nameErrorId : undefined}
+            onChange={(e) => handleNameChange(e.target.value)}
           />
         </label>
         <button
           type="button"
           className="btn-primary"
-          onClick={onSave}
-          disabled={!canSave || atMax}
+          onClick={handleSaveClick}
+          disabled={!portfolioReady || atMax}
           title={
             atMax
               ? `Maximum ${MAX_SNAPSHOTS} snapshots`
-              : canSave
+              : portfolioReady
                 ? "Freeze current portfolio as a snapshot"
-                : "Name required; need tickers and valid weights"
+                : "Need tickers and valid weights"
           }
         >
           Save snapshot ({rows.length}/{MAX_SNAPSHOTS})
         </button>
       </div>
+      {nameError ? (
+        <p id={nameErrorId} className="m-0 text-sm text-neg" role="alert">
+          {nameError}
+        </p>
+      ) : null}
 
       {rows.length === 0 ? (
         <p className="m-0 text-sm text-muted">

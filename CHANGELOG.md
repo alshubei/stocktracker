@@ -2,6 +2,8 @@
 
 ## 11.10.2026 — 2026-11-10
 
+- Saving a snapshot with an empty name shows an error to write a name.
+- Snapshots help text opens under an info icon (slide), not as always-visible copy.
 - Chart hover panel scrolls when many tickers or snapshots are listed.
 - Summary centers Current value and P&L; EURUSD sits as a quiet line under them with a green/red arrow vs entry.
 - Snapshots: save up to 5 named portfolios (capital, entry date, tickers, weights). Locked curves compare to the live what-if on the chart; stored in localStorage.

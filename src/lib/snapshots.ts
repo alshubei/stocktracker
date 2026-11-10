@@ -43,6 +43,18 @@ export function createSnapshotId(): string {
   return `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+export function snapshotPortfolioReady(input: {
+  capitalEur: number;
+  entryDate: string;
+  selectedSymbols: string[];
+  weightsValid: boolean;
+}): boolean {
+  const capitalOk = Number.isFinite(input.capitalEur) && input.capitalEur > 0;
+  const dateOk = /^\d{4}-\d{2}-\d{2}$/.test(input.entryDate);
+  const tickersOk = input.selectedSymbols.length > 0;
+  return capitalOk && dateOk && tickersOk && input.weightsValid;
+}
+
 export function canSaveSnapshot(input: {
   name: string;
   capitalEur: number;
@@ -50,11 +62,7 @@ export function canSaveSnapshot(input: {
   selectedSymbols: string[];
   weightsValid: boolean;
 }): boolean {
-  const nameOk = input.name.trim().length > 0;
-  const capitalOk = Number.isFinite(input.capitalEur) && input.capitalEur > 0;
-  const dateOk = /^\d{4}-\d{2}-\d{2}$/.test(input.entryDate);
-  const tickersOk = input.selectedSymbols.length > 0;
-  return nameOk && capitalOk && dateOk && tickersOk && input.weightsValid;
+  return input.name.trim().length > 0 && snapshotPortfolioReady(input);
 }
 
 export function createSnapshot(draft: SnapshotDraft): PortfolioSnapshot {
