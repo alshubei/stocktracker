@@ -43,7 +43,7 @@ export function AllocationInput({
   mode,
   onCommit,
   id,
-  className = "field-input w-[4.75rem] min-w-[4.75rem] px-1.5 py-1 text-sm text-ink",
+  className = "field-input w-[4.75rem] max-w-full min-w-0 px-1.5 py-1 text-sm text-ink",
 }: AllocationInputProps) {
   const isEur = mode === "eur";
   const committed = formatCommitted(weightPercent, capitalEur, mode);

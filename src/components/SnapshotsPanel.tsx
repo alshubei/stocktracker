@@ -37,7 +37,7 @@ export function SnapshotsPanel({
 
   return (
     <section
-      className="panel grid gap-3 animate-[rise_0.6s_ease_both]"
+      className="panel grid min-w-0 gap-3 animate-[rise_0.6s_ease_both]"
       aria-label="Saved snapshots"
     >
       <div>

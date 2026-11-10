@@ -22,15 +22,16 @@
 @layer base {
   html {
     color-scheme: dark;
+    overflow-x: clip;
   }
 
   body {
-    @apply m-0 min-h-screen font-sans text-ink antialiased;
+    @apply m-0 min-h-screen max-w-[100vw] overflow-x-clip font-sans text-ink antialiased;
     background: var(--color-bg0);
   }
 
   #root {
-    @apply min-h-screen;
+    @apply min-h-screen max-w-[100vw] overflow-x-clip;
   }
 
   input,
@@ -41,15 +42,15 @@
 
 @layer components {
   .panel {
-    @apply rounded-lg border border-border bg-panel p-4;
+    @apply max-w-full rounded-lg border border-border bg-panel p-4;
   }
 
   .field {
-    @apply grid gap-1 text-[0.8rem] text-muted;
+    @apply grid min-w-0 gap-1 text-[0.8rem] text-muted;
   }
 
   .field-input {
-    @apply min-w-[8rem] rounded-lg border border-border bg-panel px-[0.7rem] py-[0.55rem] text-ink outline-none focus:border-accent;
+    @apply w-full min-w-0 max-w-full rounded-lg border border-border bg-panel px-[0.7rem] py-[0.55rem] text-ink outline-none focus:border-accent;
   }
 
   .btn-primary {

@@ -55,10 +55,10 @@ export function PositionsTable({
   }, [universe, query, selected]);
 
   return (
-    <section className="panel animate-[rise_0.75s_ease_both]">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
+    <section className="panel min-w-0 animate-[rise_0.75s_ease_both]">
+      <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-3">
         <h2 className="m-0 font-serif text-xl font-semibold">Positions</h2>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           <div className="flex items-center gap-2.5">
             <button
               type="button"
@@ -73,7 +73,7 @@ export function PositionsTable({
               onChange={onWeightInputModeChange}
             />
           </div>
-          <label className="field min-w-[12rem]">
+          <label className="field min-w-0 basis-[10rem] flex-1">
             <span className="sr-only">Filter positions</span>
             <input
               className="field-input w-full"
@@ -93,8 +93,8 @@ export function PositionsTable({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-[0.92rem]">
+      <div className="min-w-0 overflow-x-auto">
+        <table className="w-full min-w-[36rem] border-collapse text-[0.92rem]">
           <thead>
             <tr>
               {(
@@ -143,7 +143,7 @@ export function PositionsTable({
                       capitalEur={capitalEur}
                       mode={weightInputMode}
                       onCommit={onAllocationCommit}
-                      className="field-input w-[5.5rem] min-w-[5rem] px-1.5 py-1 text-sm text-ink"
+                      className="field-input w-[5rem] max-w-full min-w-0 px-1.5 py-1 text-sm text-ink"
                     />
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">

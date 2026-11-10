@@ -36,6 +36,15 @@ type PortfolioSummaryProps = {
   compareData?: Array<Record<string, string | number>>;
 };
 
+const compactEurAxis = (v: number) =>
+  new Intl.NumberFormat("de-DE", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(v);
+
+/** Tight plot margins — favor series width over axis chrome. */
+const CHART_MARGIN = { top: 6, right: 4, left: 0, bottom: 0 };
+
 export function PortfolioSummary({
   result,
   compareSeries = [],
@@ -43,7 +52,7 @@ export function PortfolioSummary({
 }: PortfolioSummaryProps) {
   if (!result) {
     return (
-      <section className="panel animate-[rise_0.75s_ease_both]">
+      <section className="panel min-w-0 animate-[rise_0.75s_ease_both]">
         <p className="m-0 text-muted">
           Load market data to see portfolio summary.
         </p>
@@ -57,28 +66,30 @@ export function PortfolioSummary({
   const fxDelta = result.latestFx - result.entryFx;
 
   return (
-    <section className="panel animate-[rise_0.75s_ease_both]">
-      <div className="mb-4">
-        <div className="mx-auto grid max-w-xl grid-cols-2 gap-6">
-          <div>
-            <span className="mb-1 block text-sm text-muted">
+    <section className="panel min-w-0 overflow-hidden p-3 animate-[rise_0.75s_ease_both] max-sm:-mx-1.5 sm:p-4">
+      <div className="mb-3 min-w-0 px-0.5 sm:mb-4 sm:px-0">
+        <div className="mx-auto grid max-w-xl grid-cols-2 gap-3 sm:gap-6">
+          <div className="min-w-0">
+            <span className="mb-1 block text-xs text-muted sm:text-sm">
               {comparing ? "What-if value" : "Current value"}
             </span>
-            <strong className="block text-[1.35rem]">
+            <strong className="block text-[1.2rem] tabular-nums [overflow-wrap:anywhere] sm:text-[1.35rem]">
               {formatEur(result.totalValueEur)}
             </strong>
-            <span className="text-sm text-muted">
+            <span className="text-xs text-muted sm:text-sm">
               {formatUsd(result.totalValueUsd)}
             </span>
           </div>
-          <div>
-            <span className="mb-1 block text-sm text-muted">
+          <div className="min-w-0">
+            <span className="mb-1 block text-xs text-muted sm:text-sm">
               P&amp;L since entry
             </span>
             <strong
-              className={`flex items-baseline gap-2 text-[1.35rem] ${pnlClass(result.totalPnlEur)}`}
+              className={`flex flex-wrap items-baseline gap-2 text-[1.2rem] tabular-nums sm:text-[1.35rem] ${pnlClass(result.totalPnlEur)}`}
             >
-              <span>{formatEur(result.totalPnlEur)}</span>
+              <span className="[overflow-wrap:anywhere]">
+                {formatEur(result.totalPnlEur)}
+              </span>
               <span
                 className={`text-sm font-semibold ${pnlClass(result.totalPnlEur)}`}
                 title={
@@ -103,13 +114,13 @@ export function PortfolioSummary({
                     : "▼"}
               </span>
             </strong>
-            <span className={`text-sm ${pnlClass(result.totalPnlPercent)}`}>
+            <span className={`text-xs sm:text-sm ${pnlClass(result.totalPnlPercent)}`}>
               {formatPct(result.totalPnlPercent)}
             </span>
           </div>
         </div>
         <p
-          className="mt-3 mb-0 text-center text-xs text-muted"
+          className="mt-2 mb-0 text-center text-[0.7rem] text-muted sm:mt-3 sm:text-xs"
           title={
             fxDelta === 0
               ? "EURUSD unchanged vs entry"
@@ -129,32 +140,35 @@ export function PortfolioSummary({
         </p>
       </div>
 
-      <div className="h-[280px] w-full lg:h-[400px]">
+      {/* Full-bleed plot on small screens; reclaim side padding for the series */}
+      <div className="-mx-1.5 h-[260px] min-w-0 overflow-hidden sm:mx-0 sm:h-[280px] lg:h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           {comparing ? (
-            <LineChart data={compareData}>
+            <LineChart data={compareData} margin={CHART_MARGIN}>
               <CartesianGrid stroke="#2a3831" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fill: "#93a59b", fontSize: 12 }}
-                minTickGap={40}
+                tick={{ fill: "#93a59b", fontSize: 10 }}
+                minTickGap={28}
+                tickMargin={4}
+                height={28}
+                interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fill: "#93a59b", fontSize: 12 }}
-                width={72}
-                tickFormatter={(v: number) =>
-                  new Intl.NumberFormat("de-DE", {
-                    notation: "compact",
-                    maximumFractionDigits: 1,
-                  }).format(v)
-                }
+                tick={{ fill: "#93a59b", fontSize: 10 }}
+                width={40}
+                tickMargin={2}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={compactEurAxis}
               />
               <Tooltip
                 content={<CompareChartTooltip series={drawable} />}
                 wrapperStyle={{ pointerEvents: "auto", outline: "none" }}
               />
               <Legend
-                wrapperStyle={{ fontSize: 12, color: "#93a59b" }}
+                wrapperStyle={{ fontSize: 11, color: "#93a59b", paddingTop: 4 }}
+                iconSize={8}
                 formatter={(value) => {
                   const match = drawable.find((s) => s.id === value);
                   return match?.label ?? value;
@@ -181,7 +195,7 @@ export function PortfolioSummary({
               ))}
             </LineChart>
           ) : (
-            <AreaChart data={result.valueSeries}>
+            <AreaChart data={result.valueSeries} margin={CHART_MARGIN}>
               <defs>
                 <linearGradient id="valueFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={chartColor} stopOpacity={0.35} />
@@ -195,18 +209,19 @@ export function PortfolioSummary({
               <CartesianGrid stroke="#2a3831" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fill: "#93a59b", fontSize: 12 }}
-                minTickGap={40}
+                tick={{ fill: "#93a59b", fontSize: 10 }}
+                minTickGap={28}
+                tickMargin={4}
+                height={28}
+                interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fill: "#93a59b", fontSize: 12 }}
-                width={72}
-                tickFormatter={(v: number) =>
-                  new Intl.NumberFormat("de-DE", {
-                    notation: "compact",
-                    maximumFractionDigits: 1,
-                  }).format(v)
-                }
+                tick={{ fill: "#93a59b", fontSize: 10 }}
+                width={40}
+                tickMargin={2}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={compactEurAxis}
               />
               <Tooltip
                 content={<ChartTooltip />}

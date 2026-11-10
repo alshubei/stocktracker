@@ -42,11 +42,11 @@ export function SnapshotSaveBar({
   return (
     <section
       id="snapshot-save"
-      className="panel grid gap-2.5 animate-[rise_0.6s_ease_both]"
+      className="panel grid min-w-0 gap-2.5 animate-[rise_0.6s_ease_both]"
       aria-label={editing ? "Update snapshot" : "Save snapshot"}
     >
       <div className="flex flex-wrap items-end gap-3">
-        <label className="field min-w-[14rem] flex-1">
+        <label className="field min-w-0 flex-1 basis-[12rem]">
           Snapshot name
           <input
             className={`field-input w-full ${nameError ? "border-neg" : ""}`}

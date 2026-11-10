@@ -69,7 +69,7 @@ export function TickerFocus({
 
   return (
     <section
-      className="panel grid gap-3 animate-[rise_0.6s_ease_both]"
+      className="panel grid min-w-0 gap-3 animate-[rise_0.6s_ease_both]"
       aria-label="Ticker search and selection"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -170,7 +170,7 @@ export function TickerFocus({
           return (
             <div
               key={ticker.symbol}
-              className={`flex min-w-0 items-center gap-2 rounded-md border bg-bg0 px-2 py-1.5 text-sm ${
+              className={`flex min-w-0 flex-wrap items-center gap-2 rounded-md border bg-bg0 px-2 py-1.5 text-sm ${
                 active ? "border-accent" : "border-border"
               }`}
             >
@@ -184,7 +184,7 @@ export function TickerFocus({
               />
               <label
                 htmlFor={id}
-                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
+                className="flex min-w-0 flex-1 basis-[8rem] cursor-pointer items-center gap-2"
               >
                 <span className="shrink-0 font-semibold tracking-wide">
                   {ticker.symbol}
@@ -193,6 +193,7 @@ export function TickerFocus({
                   {ticker.name}
                 </span>
               </label>
+              <KindBadge kind={ticker.kind} />
               {active ? (
                 <AllocationInput
                   id={weightId}
@@ -201,13 +202,13 @@ export function TickerFocus({
                   capitalEur={capitalEur}
                   mode={weightInputMode}
                   onCommit={onAllocationCommit}
+                  className="field-input w-[4.5rem] max-w-full min-w-0 px-1.5 py-1 text-sm text-ink"
                 />
               ) : (
-                <span className="w-[6.5rem] shrink-0 text-right text-xs text-muted">
+                <span className="w-[4.5rem] shrink-0 text-right text-xs text-muted">
                   —
                 </span>
               )}
-              <KindBadge kind={ticker.kind} />
             </div>
           );
         })}
