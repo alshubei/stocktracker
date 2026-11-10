@@ -327,7 +327,7 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto grid max-w-[1180px] gap-5 px-5 py-6 pb-28 max-sm:px-3.5 max-sm:py-4 max-sm:pb-32">
+    <div className="mx-auto grid max-w-[1180px] gap-5 px-5 py-6 pb-32 max-sm:px-3.5 max-sm:py-4 max-sm:pb-36">
       <TopBar
         capitalEur={capitalEur}
         entryDate={entryDate}
