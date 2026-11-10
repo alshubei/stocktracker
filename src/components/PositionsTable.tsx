@@ -26,7 +26,6 @@ type PositionsTableProps = {
   onWeightInputModeChange: (mode: WeightInputMode) => void;
   errors: Record<string, string>;
   selectedSymbols: string[];
-  onSelectedChange: (symbols: string[]) => void;
   onAllocationCommit: (symbol: string, value: number) => void;
   onEqualSplit: () => void;
 };
@@ -42,48 +41,18 @@ export function PositionsTable({
   onWeightInputModeChange,
   errors,
   selectedSymbols,
-  onSelectedChange,
   onAllocationCommit,
   onEqualSplit,
 }: PositionsTableProps) {
   const [query, setQuery] = useState("");
   const bySymbol = new Map(positions?.map((p) => [p.symbol, p]) ?? []);
   const selected = useMemo(() => new Set(selectedSymbols), [selectedSymbols]);
-  const isPartialSelection =
-    selectedSymbols.length > 0 && selectedSymbols.length < universe.length;
 
   const visible = useMemo(() => {
-    const matched = universe.filter((t) => matchesTickerQuery(t, query));
-    if (
-      selectedSymbols.length > 0 &&
-      selectedSymbols.length < universe.length &&
-      !query.trim()
-    ) {
-      return [...matched].sort((a, b) => {
-        const aOn = selected.has(a.symbol) ? 0 : 1;
-        const bOn = selected.has(b.symbol) ? 0 : 1;
-        return aOn - bOn;
-      });
-    }
-    return matched;
-  }, [universe, query, selectedSymbols, selected]);
-
-  const allSymbols = universe.map((t) => t.symbol);
-  const allSelected =
-    allSymbols.length > 0 && allSymbols.every((s) => selected.has(s));
-  const someSelected = selectedSymbols.length > 0 && !allSelected;
-
-  function toggleSymbol(symbol: string) {
-    if (selected.has(symbol)) {
-      onSelectedChange(selectedSymbols.filter((s) => s !== symbol));
-    } else {
-      onSelectedChange([...selectedSymbols, symbol]);
-    }
-  }
-
-  function toggleSelectAll(checked: boolean) {
-    onSelectedChange(checked ? allSymbols : []);
-  }
+    return universe.filter(
+      (t) => selected.has(t.symbol) && matchesTickerQuery(t, query),
+    );
+  }, [universe, query, selected]);
 
   return (
     <section className="panel animate-[rise_0.75s_ease_both]">
@@ -116,17 +85,9 @@ export function PositionsTable({
           </label>
           <span className={weightsValid ? "text-muted" : "text-warn"}>
             {weightInputMode === "eur" ? (
-              <>
-                Allocated
-                {isPartialSelection ? " (selection)" : ""}:{" "}
-                {formatEur(weightToEur(weightSum, capitalEur))}
-              </>
+              <>Allocated: {formatEur(weightToEur(weightSum, capitalEur))}</>
             ) : (
-              <>
-                Weights sum
-                {isPartialSelection ? " (selection)" : ""}:{" "}
-                {weightSum.toFixed(2)}%
-              </>
+              <>Weights sum: {weightSum.toFixed(2)}%</>
             )}
           </span>
         </div>
@@ -136,18 +97,6 @@ export function PositionsTable({
         <table className="w-full border-collapse text-[0.92rem]">
           <thead>
             <tr>
-              <th className="w-8 px-2 py-2.5 text-center align-middle text-[0.78rem] font-medium tracking-wide text-muted uppercase">
-                <input
-                  className="check-input"
-                  type="checkbox"
-                  checked={allSelected}
-                  ref={(el) => {
-                    if (el) el.indeterminate = someSelected;
-                  }}
-                  onChange={(e) => toggleSelectAll(e.target.checked)}
-                  aria-label="Select all tickers"
-                />
-              </th>
               {(
                 [
                   "Ticker",
@@ -174,22 +123,8 @@ export function PositionsTable({
             {visible.map((ticker) => {
               const row = bySymbol.get(ticker.symbol);
               const err = errors[ticker.symbol];
-              const isOn = selected.has(ticker.symbol);
-              const dimmed = isPartialSelection && !isOn;
               return (
-                <tr
-                  key={ticker.symbol}
-                  className={`${isOn && isPartialSelection ? "bg-accent/10" : ""} ${dimmed ? "opacity-45" : ""}`}
-                >
-                  <td className="w-8 border-b border-border px-2 py-2.5 text-center align-middle">
-                    <input
-                      className="check-input"
-                      type="checkbox"
-                      checked={isOn}
-                      onChange={() => toggleSymbol(ticker.symbol)}
-                      aria-label={`Select ${ticker.symbol}`}
-                    />
-                  </td>
+                <tr key={ticker.symbol}>
                   <td className="border-b border-border px-2 py-2.5 align-top">
                     <div className="grid gap-0.5">
                       <strong>{ticker.symbol}</strong>
@@ -201,53 +136,51 @@ export function PositionsTable({
                     <KindBadge kind={ticker.kind} />
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">
-                    {dimmed || !isOn ? (
-                      <span className="text-muted">—</span>
-                    ) : (
-                      <AllocationInput
-                        id={`position-weight-${ticker.symbol}`}
-                        symbol={ticker.symbol}
-                        weightPercent={weights[ticker.symbol] ?? 0}
-                        capitalEur={capitalEur}
-                        mode={weightInputMode}
-                        onCommit={onAllocationCommit}
-                        className="field-input w-[5.5rem] min-w-[5rem] px-1.5 py-1 text-sm text-ink"
-                      />
-                    )}
+                    <AllocationInput
+                      id={`position-weight-${ticker.symbol}`}
+                      symbol={ticker.symbol}
+                      weightPercent={weights[ticker.symbol] ?? 0}
+                      capitalEur={capitalEur}
+                      mode={weightInputMode}
+                      onCommit={onAllocationCommit}
+                      className="field-input w-[5.5rem] min-w-[5rem] px-1.5 py-1 text-sm text-ink"
+                    />
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">
-                    {dimmed ? "—" : row ? formatEur(row.eurAllocated) : "—"}
+                    {row ? formatEur(row.eurAllocated) : "—"}
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">
-                    {!dimmed && row
+                    {row
                       ? `${formatUsd(row.entryPriceUsd)} (${row.entryDateUsed})`
                       : "—"}
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">
-                    {!dimmed && row ? formatShares(row.shares) : "—"}
+                    {row ? formatShares(row.shares) : "—"}
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">
-                    {!dimmed && row ? formatEur(row.valueEur) : "—"}
+                    {row ? formatEur(row.valueEur) : "—"}
                   </td>
                   <td
                     className={`border-b border-border px-2 py-2.5 align-top ${
-                      !dimmed && row ? pnlClass(row.pnlEur) : ""
+                      row ? pnlClass(row.pnlEur) : ""
                     }`}
                   >
-                    {!dimmed && row
+                    {row
                       ? `${formatEur(row.pnlEur)} (${formatPct(row.pnlPercent)})`
                       : "—"}
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">
-                    {!dimmed && row ? formatUsd(row.valueUsd) : "—"}
+                    {row ? formatUsd(row.valueUsd) : "—"}
                   </td>
                 </tr>
               );
             })}
             {visible.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-2 py-3 text-muted">
-                  No positions match the filter.
+                <td colSpan={9} className="px-2 py-3 text-muted">
+                  {selectedSymbols.length === 0
+                    ? "No tickers selected — pick some in Focus."
+                    : "No positions match the filter."}
                 </td>
               </tr>
             ) : null}

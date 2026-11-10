@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PortfolioSummary } from "./components/PortfolioSummary.tsx";
 import { PositionsTable } from "./components/PositionsTable.tsx";
+import { SnapshotSaveBar } from "./components/SnapshotSaveBar.tsx";
 import { SnapshotsPanel } from "./components/SnapshotsPanel.tsx";
 import { TickerFocus } from "./components/TickerFocus.tsx";
 import { SiteFooter } from "./components/SiteFooter.tsx";
@@ -349,6 +350,12 @@ export default function App() {
     if (!snap) return;
     applySnapshotToForm(snap);
     setEditingSnapshotId(id);
+    requestAnimationFrame(() => {
+      document.getElementById("snapshot-save")?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
   }
 
   function handleCancelEditSnapshot() {
@@ -407,13 +414,18 @@ export default function App() {
         </div>
       ) : null}
 
-      <SnapshotsPanel
+      <SnapshotSaveBar
         name={snapshotName}
         onNameChange={setSnapshotName}
         portfolioReady={portfolioReady}
         editingId={editingSnapshotId}
+        snapshotCount={snapshots.length}
         onSave={handleSaveSnapshot}
         onCancelEdit={handleCancelEditSnapshot}
+      />
+
+      <SnapshotsPanel
+        editingId={editingSnapshotId}
         rows={snapshotRows}
         onRemove={handleRemoveSnapshot}
         onLoad={handleLoadSnapshot}
@@ -437,7 +449,6 @@ export default function App() {
         onWeightInputModeChange={setWeightInputMode}
         errors={market?.errors ?? {}}
         selectedSymbols={selectedSymbols}
-        onSelectedChange={handleSelectedChange}
         onAllocationCommit={handleAllocationCommit}
         onEqualSplit={handleEqualSplit}
       />

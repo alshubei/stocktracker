@@ -22,8 +22,8 @@ export function TopBar({
           Stocktracker
         </h1>
         <p className="m-0 text-sm leading-snug text-muted">
-          Live what-if: set capital and entry date. Save a snapshot below to
-          lock a portfolio and compare it on the chart.
+          Live what-if: set capital, entry date, and Focus. Save a snapshot
+          under Focus to lock a portfolio and compare it on the chart.
         </p>
       </div>
       <div className="flex flex-wrap items-end gap-3">

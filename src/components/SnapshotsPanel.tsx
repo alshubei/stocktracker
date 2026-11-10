@@ -15,14 +15,7 @@ type SnapshotRow = {
 };
 
 type SnapshotsPanelProps = {
-  name: string;
-  onNameChange: (name: string) => void;
-  /** Portfolio inputs are valid (name validated in the panel). */
-  portfolioReady: boolean;
-  /** When set, primary action updates this snapshot instead of adding. */
   editingId: string | null;
-  onSave: () => void;
-  onCancelEdit: () => void;
   rows: SnapshotRow[];
   onRemove: (id: string) => void;
   onLoad: (id: string) => void;
@@ -30,49 +23,31 @@ type SnapshotsPanelProps = {
 };
 
 const SNAPSHOT_HINT =
-  "Save a named portfolio (capital, entry date, tickers, weights). It stays fixed; the form above stays a live what-if. Edit loads a snapshot into the form so you can change it and update. With at least one snapshot, the chart compares those locked curves to today against your current what-if.";
+  "Locked portfolios for chart comparison against the live what-if. Edit loads one into the form above so you can change it and update; Load only copies it into the live what-if.";
 
 export function SnapshotsPanel({
-  name,
-  onNameChange,
-  portfolioReady,
   editingId,
-  onSave,
-  onCancelEdit,
   rows,
   onRemove,
   onLoad,
   onEdit,
 }: SnapshotsPanelProps) {
-  const editing = editingId != null;
-  const atMax = rows.length >= MAX_SNAPSHOTS;
   const [hintOpen, setHintOpen] = useState(false);
-  const [nameError, setNameError] = useState<string | null>(null);
   const hintId = useId();
-  const nameErrorId = useId();
-
-  function handleNameChange(value: string) {
-    onNameChange(value);
-    if (nameError && value.trim()) setNameError(null);
-  }
-
-  function handleSaveClick() {
-    if (!name.trim()) {
-      setNameError("Write a name for this snapshot.");
-      return;
-    }
-    setNameError(null);
-    onSave();
-  }
 
   return (
     <section
       className="panel grid gap-3 animate-[rise_0.6s_ease_both]"
-      aria-label="Snapshots"
+      aria-label="Saved snapshots"
     >
       <div>
         <div className="flex items-center gap-1.5">
-          <h2 className="m-0 font-serif text-xl font-semibold">Snapshots</h2>
+          <h2 className="m-0 font-serif text-xl font-semibold">
+            Saved snapshots
+          </h2>
+          <span className="text-sm text-muted">
+            {rows.length}/{MAX_SNAPSHOTS}
+          </span>
           <button
             type="button"
             className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-bg0 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -102,68 +77,10 @@ export function SnapshotsPanel({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="field min-w-[14rem] flex-1">
-          Snapshot name
-          <input
-            className={`field-input w-full ${nameError ? "border-neg" : ""}`}
-            type="text"
-            value={name}
-            maxLength={48}
-            placeholder="e.g. April dip, NVDA-heavy"
-            aria-invalid={nameError ? true : undefined}
-            aria-describedby={nameError ? nameErrorId : undefined}
-            onChange={(e) => handleNameChange(e.target.value)}
-          />
-        </label>
-        <div className="flex flex-wrap items-center gap-2">
-          {editing ? (
-            <button
-              type="button"
-              className="text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
-              onClick={onCancelEdit}
-            >
-              Cancel edit
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={handleSaveClick}
-            disabled={!portfolioReady || (!editing && atMax)}
-            title={
-              editing
-                ? portfolioReady
-                  ? "Update this snapshot from the current form"
-                  : "Need tickers and valid weights"
-                : atMax
-                  ? `Maximum ${MAX_SNAPSHOTS} snapshots`
-                  : portfolioReady
-                    ? "Freeze current portfolio as a snapshot"
-                    : "Need tickers and valid weights"
-            }
-          >
-            {editing
-              ? "Update snapshot"
-              : `Save snapshot (${rows.length}/${MAX_SNAPSHOTS})`}
-          </button>
-        </div>
-      </div>
-      {editing ? (
-        <p className="m-0 text-sm text-muted">
-          Editing a saved snapshot — change capital, entry, tickers, or weights
-          above, then update.
-        </p>
-      ) : null}
-      {nameError ? (
-        <p id={nameErrorId} className="m-0 text-sm text-neg" role="alert">
-          {nameError}
-        </p>
-      ) : null}
-
       {rows.length === 0 ? (
         <p className="m-0 text-sm text-muted">
-          No snapshots yet — save one to unlock comparison curves.
+          No snapshots yet — save one above the chart to unlock comparison
+          curves.
         </p>
       ) : (
         <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2">
