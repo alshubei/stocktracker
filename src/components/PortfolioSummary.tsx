@@ -15,6 +15,7 @@ import {
   pnlChartColor,
   pnlClass,
 } from "../lib/format.ts";
+import { ChartTooltip } from "./ChartTooltip.tsx";
 
 type PortfolioSummaryProps = {
   result: PortfolioResult | null;
@@ -103,15 +104,7 @@ export function PortfolioSummary({
                 }).format(v)
               }
             />
-            <Tooltip
-              formatter={(value: number) => [formatEur(value), "Value"]}
-              contentStyle={{
-                background: "#1b2621",
-                border: "1px solid #2d3c35",
-                borderRadius: 8,
-                color: "#e8f0eb",
-              }}
-            />
+            <Tooltip content={<ChartTooltip />} />
             <Area
               type="monotone"
               dataKey="valueEur"
