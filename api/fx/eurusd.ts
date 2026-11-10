@@ -1,26 +1,29 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { FX_SYMBOL, historyPayload, isIsoDate } from "../_lib/market";
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "GET") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+export const config = { runtime: "edge" };
+
+export default async function handler(request: Request): Promise<Response> {
+  if (request.method !== "GET") {
+    return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
 
   try {
-    const from = String(req.query.from ?? "").trim();
-    const to = String(req.query.to ?? "").trim();
+    const url = new URL(request.url);
+    const from = String(url.searchParams.get("from") ?? "").trim();
+    const to = String(url.searchParams.get("to") ?? "").trim();
 
     if (!isIsoDate(from) || !isIsoDate(to)) {
-      res.status(400).json({
-        error: "Query params required: from (YYYY-MM-DD), to (YYYY-MM-DD)",
-      });
-      return;
+      return Response.json(
+        {
+          error: "Query params required: from (YYYY-MM-DD), to (YYYY-MM-DD)",
+        },
+        { status: 400 },
+      );
     }
 
-    res.status(200).json(await historyPayload(FX_SYMBOL, from, to));
+    return Response.json(await historyPayload(FX_SYMBOL, from, to));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    res.status(502).json({ error: message });
+    return Response.json({ error: message }, { status: 502 });
   }
 }
