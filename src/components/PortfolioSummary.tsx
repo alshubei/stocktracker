@@ -129,8 +129,8 @@ export function PortfolioSummary({
         </p>
       </div>
 
-      <div className="min-h-[280px] w-full">
-        <ResponsiveContainer width="100%" height={280}>
+      <div className="h-[280px] w-full lg:h-[400px]">
+        <ResponsiveContainer width="100%" height="100%">
           {comparing ? (
             <LineChart data={compareData}>
               <CartesianGrid stroke="#2a3831" vertical={false} />

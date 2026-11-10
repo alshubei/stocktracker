@@ -46,7 +46,7 @@ export function WhatIfResultBar({
         className={`pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b ${wash}`}
         aria-hidden
       />
-      <div className="pointer-events-auto relative mx-auto flex max-w-[1180px] flex-col items-center gap-2 px-4 py-3.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-end sm:justify-center sm:gap-6">
+      <div className="pointer-events-auto relative mx-auto flex max-w-[1280px] flex-col items-center gap-2 px-4 py-3.5 pb-[max(0.85rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-end sm:justify-center sm:gap-6">
         <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1">
           <div className="text-center sm:text-left">
             <span className="mb-0.5 block text-[0.7rem] font-medium tracking-wide text-muted uppercase">

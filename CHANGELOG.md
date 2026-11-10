@@ -2,8 +2,11 @@
 
 ## 11.10.2026 — 2026-11-10
 
+- Header subtitle sells the what-if idea in larger serif type (not UI instructions).
+- Impressum and disclaimer slide open from an info icon; version stays visible.
+- Chart-first layout: desktop workbench (Focus left, chart right); mobile shows chart first with Focus collapsed.
 - Positions table lists only Focus-selected tickers (no selection checkboxes).
-- Snapshot save/update sits under Focus; the saved list sits just above the chart.
+- Snapshot save/update sits under Focus; the saved list sits under the chart.
 - Snapshots can be edited: Edit loads into the form, Update writes back in place.
 - Sticky result bar: calm elevated surface, soft P&L wash at the top edge, spotlighted value/P&L.
 - € allocation: while typing one ticker, others rebalance equally live; % mode stays manual until weights sum to 100%.

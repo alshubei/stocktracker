@@ -371,8 +371,21 @@ export default function App() {
     }
   }
 
+  const weightWarning =
+    selectedSymbols.length === 0 ? (
+      <div className="rounded-[10px] border border-warn/50 bg-warn/12 px-4 py-3">
+        Select at least one ticker to compute the what-if portfolio.
+      </div>
+    ) : !valid ? (
+      <div className="rounded-[10px] border border-warn/50 bg-warn/12 px-4 py-3">
+        {weightInputMode === "percent"
+          ? `Selected weights must sum to 100% (currently ${sum.toFixed(2)}%). Fix the % values — they are not auto-balanced.`
+          : `Selected weights must sum to 100% before P&L can run (currently ${sum.toFixed(2)}%). Edit a € amount to rebalance, or switch to % and fix the split.`}
+      </div>
+    ) : null;
+
   return (
-    <div className="mx-auto grid max-w-[1180px] gap-5 px-5 py-6 pb-32 max-sm:px-3.5 max-sm:py-4 max-sm:pb-36">
+    <div className="mx-auto grid max-w-[1280px] gap-5 px-5 py-6 pb-32 max-sm:px-3.5 max-sm:py-4 max-sm:pb-36">
       <TopBar
         capitalEur={capitalEur}
         entryDate={entryDate}
@@ -384,74 +397,70 @@ export default function App() {
         onRefresh={() => void loadMarket(fetchFromKey)}
       />
 
-      <TickerFocus
-        universe={UNIVERSE}
-        selectedSymbols={selectedSymbols}
-        weights={weights}
-        capitalEur={capitalEur}
-        weightInputMode={weightInputMode}
-        onWeightInputModeChange={setWeightInputMode}
-        onSelectedChange={handleSelectedChange}
-        onAllocationCommit={handleAllocationCommit}
-        onEqualSplit={handleEqualSplit}
-      />
-
-      {selectedSymbols.length === 0 ? (
-        <div className="rounded-[10px] border border-warn/50 bg-warn/12 px-4 py-3">
-          Select at least one ticker to compute the what-if portfolio.
-        </div>
-      ) : !valid ? (
-        <div className="rounded-[10px] border border-warn/50 bg-warn/12 px-4 py-3">
-          {weightInputMode === "percent"
-            ? `Selected weights must sum to 100% (currently ${sum.toFixed(2)}%). Fix the % values — they are not auto-balanced.`
-            : `Selected weights must sum to 100% before P&L can run (currently ${sum.toFixed(2)}%). Edit a € amount to rebalance, or switch to % and fix the split.`}
-        </div>
-      ) : null}
-
       {error ? (
         <div className="rounded-[10px] border border-neg/50 bg-neg/12 px-4 py-3">
           {error}
         </div>
       ) : null}
 
-      <SnapshotSaveBar
-        name={snapshotName}
-        onNameChange={setSnapshotName}
-        portfolioReady={portfolioReady}
-        editingId={editingSnapshotId}
-        snapshotCount={snapshots.length}
-        onSave={handleSaveSnapshot}
-        onCancelEdit={handleCancelEditSnapshot}
-      />
+      <div className="grid gap-5 lg:grid-cols-[minmax(17.5rem,22rem)_minmax(0,1fr)] lg:items-start">
+        {/* Mobile: chart → Focus/save → snapshots/positions. Desktop: sticky inputs | chart stack */}
+        <div className="order-1 lg:col-start-2 lg:row-start-1">
+          <PortfolioSummary
+            result={activeResult}
+            compareSeries={compareSeries}
+            compareData={compareData}
+          />
+        </div>
 
-      <SnapshotsPanel
-        editingId={editingSnapshotId}
-        rows={snapshotRows}
-        onRemove={handleRemoveSnapshot}
-        onLoad={handleLoadSnapshot}
-        onEdit={handleEditSnapshot}
-      />
+        <div className="order-2 grid gap-5 self-start lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-1.5rem)] lg:overflow-y-auto lg:pb-2">
+          <TickerFocus
+            universe={UNIVERSE}
+            selectedSymbols={selectedSymbols}
+            weights={weights}
+            capitalEur={capitalEur}
+            weightInputMode={weightInputMode}
+            onWeightInputModeChange={setWeightInputMode}
+            onSelectedChange={handleSelectedChange}
+            onAllocationCommit={handleAllocationCommit}
+            onEqualSplit={handleEqualSplit}
+          />
+          {weightWarning}
+          <SnapshotSaveBar
+            name={snapshotName}
+            onNameChange={setSnapshotName}
+            portfolioReady={portfolioReady}
+            editingId={editingSnapshotId}
+            snapshotCount={snapshots.length}
+            onSave={handleSaveSnapshot}
+            onCancelEdit={handleCancelEditSnapshot}
+          />
+        </div>
 
-      <PortfolioSummary
-        result={activeResult}
-        compareSeries={compareSeries}
-        compareData={compareData}
-      />
-
-      <PositionsTable
-        universe={UNIVERSE}
-        weights={weights}
-        positions={activeResult?.positions ?? null}
-        weightSum={sum}
-        weightsValid={valid}
-        capitalEur={capitalEur}
-        weightInputMode={weightInputMode}
-        onWeightInputModeChange={setWeightInputMode}
-        errors={market?.errors ?? {}}
-        selectedSymbols={selectedSymbols}
-        onAllocationCommit={handleAllocationCommit}
-        onEqualSplit={handleEqualSplit}
-      />
+        <div className="order-3 grid gap-5 lg:col-start-2 lg:row-start-2">
+          <SnapshotsPanel
+            editingId={editingSnapshotId}
+            rows={snapshotRows}
+            onRemove={handleRemoveSnapshot}
+            onLoad={handleLoadSnapshot}
+            onEdit={handleEditSnapshot}
+          />
+          <PositionsTable
+            universe={UNIVERSE}
+            weights={weights}
+            positions={activeResult?.positions ?? null}
+            weightSum={sum}
+            weightsValid={valid}
+            capitalEur={capitalEur}
+            weightInputMode={weightInputMode}
+            onWeightInputModeChange={setWeightInputMode}
+            errors={market?.errors ?? {}}
+            selectedSymbols={selectedSymbols}
+            onAllocationCommit={handleAllocationCommit}
+            onEqualSplit={handleEqualSplit}
+          />
+        </div>
+      </div>
 
       <SiteFooter />
 

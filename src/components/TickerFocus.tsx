@@ -35,7 +35,12 @@ export function TickerFocus({
 }: TickerFocusProps) {
   const [query, setQuery] = useState("");
   const [hintOpen, setHintOpen] = useState(false);
+  // Mobile: collapsed when a selection already exists so the chart stays first.
+  const [mobileOpen, setMobileOpen] = useState(
+    () => selectedSymbols.length === 0,
+  );
   const hintId = useId();
+  const bodyId = useId();
   const selected = useMemo(() => new Set(selectedSymbols), [selectedSymbols]);
 
   const filtered = useMemo(
@@ -67,50 +72,65 @@ export function TickerFocus({
       className="panel grid gap-3 animate-[rise_0.6s_ease_both]"
       aria-label="Ticker search and selection"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <h2 className="m-0 font-serif text-xl font-semibold">Focus</h2>
-            <button
-              type="button"
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-bg0 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              aria-expanded={hintOpen}
-              aria-controls={hintId}
-              onClick={() => setHintOpen((open) => !open)}
-            >
-              <InfoIcon className="size-4" />
-              <span className="sr-only">
-                {hintOpen ? "Hide focus help" : "Show focus help"}
-              </span>
-            </button>
-          </div>
-          <p className="sr-only">{FOCUS_HINT}</p>
-          <div
-            id={hintId}
-            aria-hidden
-            className={`grid transition-[grid-template-rows] duration-200 ease-out ${
-              hintOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-            }`}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <h2 className="m-0 font-serif text-xl font-semibold">Focus</h2>
+          <button
+            type="button"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-bg0 hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            aria-expanded={hintOpen}
+            aria-controls={hintId}
+            onClick={() => setHintOpen((open) => !open)}
           >
-            <div className="min-h-0 overflow-hidden">
-              <p className="mt-2 mb-0 max-w-2xl text-sm text-muted">
-                {FOCUS_HINT}
-              </p>
-            </div>
-          </div>
+            <InfoIcon className="size-4" />
+            <span className="sr-only">
+              {hintOpen ? "Hide focus help" : "Show focus help"}
+            </span>
+          </button>
+          <span className="truncate text-sm text-muted lg:hidden">
+            {selectedSymbols.length === 0
+              ? "None selected"
+              : `${selectedSymbols.length} selected`}
+          </span>
         </div>
-        <label className="field min-w-[14rem]">
-          Search
-          <input
-            className="field-input w-full"
-            type="search"
-            placeholder="NVDA, Broadcom, ETF…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoComplete="off"
-          />
-        </label>
+        <button
+          type="button"
+          className="text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline lg:hidden"
+          aria-expanded={mobileOpen}
+          aria-controls={bodyId}
+          onClick={() => setMobileOpen((open) => !open)}
+        >
+          {mobileOpen ? "Hide" : "Edit tickers"}
+        </button>
       </div>
+      <p className="sr-only">{FOCUS_HINT}</p>
+      <div
+        id={hintId}
+        aria-hidden
+        className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+          hintOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <p className="mt-0 mb-0 max-w-2xl text-sm text-muted">{FOCUS_HINT}</p>
+        </div>
+      </div>
+
+      <div
+        id={bodyId}
+        className={`grid gap-3 ${mobileOpen ? "" : "max-lg:hidden"}`}
+      >
+      <label className="field w-full">
+        Search
+        <input
+          className="field-input w-full"
+          type="search"
+          placeholder="NVDA, Broadcom, ETF…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          autoComplete="off"
+        />
+      </label>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink">
@@ -142,11 +162,7 @@ export function TickerFocus({
         </div>
       </div>
 
-      <div
-        className="grid gap-1 sm:grid-cols-2"
-        role="group"
-        aria-label="Tickers"
-      >
+      <div className="grid gap-1" role="group" aria-label="Tickers">
         {filtered.map((ticker) => {
           const active = selected.has(ticker.symbol);
           const id = `ticker-check-${ticker.symbol}`;
@@ -196,9 +212,7 @@ export function TickerFocus({
           );
         })}
         {filtered.length === 0 ? (
-          <span className="text-muted sm:col-span-2">
-            No tickers match “{query}”.
-          </span>
+          <span className="text-muted">No tickers match “{query}”.</span>
         ) : null}
       </div>
 
@@ -214,6 +228,7 @@ export function TickerFocus({
           full capital across this selection.
         </p>
       ) : null}
+      </div>
     </section>
   );
 }
