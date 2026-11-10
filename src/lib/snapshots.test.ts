@@ -7,6 +7,7 @@ import {
   mergeSeries,
   removeSnapshot,
   snapshotPortfolioReady,
+  updateSnapshot,
 } from "./snapshots.ts";
 
 const baseDraft = {
@@ -57,6 +58,26 @@ describe("snapshots", () => {
     assert.ok(list);
     const id = list[0]!.id;
     assert.equal(removeSnapshot(list, id).length, 0);
+  });
+
+  it("updates an existing snapshot in place", () => {
+    const list = addSnapshot([], baseDraft);
+    assert.ok(list);
+    const id = list[0]!.id;
+    const next = updateSnapshot(list, id, {
+      ...baseDraft,
+      name: "Rebound",
+      capitalEur: 12_000,
+      selectedSymbols: ["NVDA", "AVGO"],
+      weights: { NVDA: 50, AVGO: 50 },
+    });
+    assert.ok(next);
+    assert.equal(next.length, 1);
+    assert.equal(next[0]!.id, id);
+    assert.equal(next[0]!.name, "Rebound");
+    assert.equal(next[0]!.capitalEur, 12_000);
+    assert.deepEqual(next[0]!.selectedSymbols, ["NVDA", "AVGO"]);
+    assert.equal(updateSnapshot(list, "missing", baseDraft), null);
   });
 
   it("merges series by date with gaps", () => {

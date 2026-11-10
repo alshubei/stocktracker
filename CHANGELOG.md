@@ -2,6 +2,7 @@
 
 ## 11.10.2026 — 2026-11-10
 
+- Snapshots can be edited: Edit loads into the form, Update writes back in place.
 - Sticky result bar: calm elevated surface, soft P&L wash at the top edge, spotlighted value/P&L.
 - € allocation: while typing one ticker, others rebalance equally live; % mode stays manual until weights sum to 100%.
 - “Reset equally” link sits left of the %·€ toggle in Focus and Positions.

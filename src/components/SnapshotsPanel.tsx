@@ -19,24 +19,32 @@ type SnapshotsPanelProps = {
   onNameChange: (name: string) => void;
   /** Portfolio inputs are valid (name validated in the panel). */
   portfolioReady: boolean;
+  /** When set, primary action updates this snapshot instead of adding. */
+  editingId: string | null;
   onSave: () => void;
+  onCancelEdit: () => void;
   rows: SnapshotRow[];
   onRemove: (id: string) => void;
   onLoad: (id: string) => void;
+  onEdit: (id: string) => void;
 };
 
 const SNAPSHOT_HINT =
-  "Save a named portfolio (capital, entry date, tickers, weights). It stays fixed; the form above stays a live what-if. With at least one snapshot, the chart compares those locked curves to today against your current what-if.";
+  "Save a named portfolio (capital, entry date, tickers, weights). It stays fixed; the form above stays a live what-if. Edit loads a snapshot into the form so you can change it and update. With at least one snapshot, the chart compares those locked curves to today against your current what-if.";
 
 export function SnapshotsPanel({
   name,
   onNameChange,
   portfolioReady,
+  editingId,
   onSave,
+  onCancelEdit,
   rows,
   onRemove,
   onLoad,
+  onEdit,
 }: SnapshotsPanelProps) {
+  const editing = editingId != null;
   const atMax = rows.length >= MAX_SNAPSHOTS;
   const [hintOpen, setHintOpen] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
@@ -108,22 +116,45 @@ export function SnapshotsPanel({
             onChange={(e) => handleNameChange(e.target.value)}
           />
         </label>
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={handleSaveClick}
-          disabled={!portfolioReady || atMax}
-          title={
-            atMax
-              ? `Maximum ${MAX_SNAPSHOTS} snapshots`
-              : portfolioReady
-                ? "Freeze current portfolio as a snapshot"
-                : "Need tickers and valid weights"
-          }
-        >
-          Save snapshot ({rows.length}/{MAX_SNAPSHOTS})
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {editing ? (
+            <button
+              type="button"
+              className="text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline"
+              onClick={onCancelEdit}
+            >
+              Cancel edit
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={handleSaveClick}
+            disabled={!portfolioReady || (!editing && atMax)}
+            title={
+              editing
+                ? portfolioReady
+                  ? "Update this snapshot from the current form"
+                  : "Need tickers and valid weights"
+                : atMax
+                  ? `Maximum ${MAX_SNAPSHOTS} snapshots`
+                  : portfolioReady
+                    ? "Freeze current portfolio as a snapshot"
+                    : "Need tickers and valid weights"
+            }
+          >
+            {editing
+              ? "Update snapshot"
+              : `Save snapshot (${rows.length}/${MAX_SNAPSHOTS})`}
+          </button>
+        </div>
       </div>
+      {editing ? (
+        <p className="m-0 text-sm text-muted">
+          Editing a saved snapshot — change capital, entry, tickers, or weights
+          above, then update.
+        </p>
+      ) : null}
       {nameError ? (
         <p id={nameErrorId} className="m-0 text-sm text-neg" role="alert">
           {nameError}
@@ -138,10 +169,15 @@ export function SnapshotsPanel({
         <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2">
           {rows.map(({ snapshot, index, valueEur, pnlPercent }) => {
             const color = snapshotColor(index);
+            const isEditingRow = editingId === snapshot.id;
             return (
               <li
                 key={snapshot.id}
-                className="flex items-stretch gap-2 rounded-lg border border-border p-2"
+                className={`flex items-stretch gap-2 rounded-lg border p-2 ${
+                  isEditingRow
+                    ? "border-accent bg-accent/10"
+                    : "border-border"
+                }`}
               >
                 <div className="grid min-w-0 flex-1 grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5 px-2 py-1.5">
                   <span
@@ -174,6 +210,14 @@ export function SnapshotsPanel({
                   </div>
                 </div>
                 <div className="flex flex-col justify-center gap-1">
+                  <button
+                    type="button"
+                    className="btn-ghost px-2.5 py-1.5 text-sm"
+                    onClick={() => onEdit(snapshot.id)}
+                    aria-pressed={isEditingRow}
+                  >
+                    Edit
+                  </button>
                   <button
                     type="button"
                     className="btn-ghost px-2.5 py-1.5 text-sm"

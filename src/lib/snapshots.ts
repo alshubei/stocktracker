@@ -103,6 +103,39 @@ export function removeSnapshot(
   return snapshots.filter((s) => s.id !== id);
 }
 
+/** Replace a snapshot’s frozen inputs; keeps id and list order. */
+export function updateSnapshot(
+  snapshots: PortfolioSnapshot[],
+  id: string,
+  draft: SnapshotDraft,
+): PortfolioSnapshot[] | null {
+  const index = snapshots.findIndex((s) => s.id === id);
+  if (index < 0) return null;
+  if (
+    !canSaveSnapshot({
+      name: draft.name,
+      capitalEur: draft.capitalEur,
+      entryDate: draft.entryDate,
+      selectedSymbols: draft.selectedSymbols,
+      weightsValid: true,
+    })
+  ) {
+    return null;
+  }
+
+  const next = [...snapshots];
+  next[index] = {
+    ...snapshots[index]!,
+    name: draft.name.trim(),
+    savedAt: new Date().toISOString(),
+    capitalEur: draft.capitalEur,
+    entryDate: draft.entryDate,
+    weights: { ...draft.weights },
+    selectedSymbols: [...draft.selectedSymbols],
+  };
+  return next;
+}
+
 export type SeriesInput = {
   id: string;
   points: Array<{ date: string; valueEur: number }>;

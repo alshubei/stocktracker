@@ -27,6 +27,7 @@ import {
   snapshotPortfolioReady,
   removeSnapshot,
   snapshotColor,
+  updateSnapshot,
   type PortfolioSnapshot,
 } from "./lib/snapshots.ts";
 import { loadConfig, saveConfig, todayIso } from "./lib/storage.ts";
@@ -99,6 +100,9 @@ export default function App() {
     initial.snapshots,
   );
   const [snapshotName, setSnapshotName] = useState("");
+  const [editingSnapshotId, setEditingSnapshotId] = useState<string | null>(
+    null,
+  );
   const [weightInputMode, setWeightInputMode] =
     useState<WeightInputMode>("eur");
   const [market, setMarket] = useState<MarketBundle | null>(null);
@@ -303,14 +307,31 @@ export default function App() {
     setWeights((prev) => ({ ...prev, ...equalWeights(symbols) }));
   }
 
+  function applySnapshotToForm(snap: PortfolioSnapshot) {
+    setCapitalEur(snap.capitalEur);
+    setEntryDate(snap.entryDate);
+    setWeights({ ...snap.weights });
+    setSelectedSymbols([...snap.selectedSymbols]);
+    setSnapshotName(snap.name);
+  }
+
   function handleSaveSnapshot() {
-    const next = addSnapshot(snapshots, {
+    const draft = {
       name: snapshotName,
       capitalEur,
       entryDate,
       weights,
       selectedSymbols,
-    });
+    };
+    if (editingSnapshotId) {
+      const next = updateSnapshot(snapshots, editingSnapshotId, draft);
+      if (!next) return;
+      setSnapshots(next);
+      setEditingSnapshotId(null);
+      setSnapshotName("");
+      return;
+    }
+    const next = addSnapshot(snapshots, draft);
     if (!next) return;
     setSnapshots(next);
     setSnapshotName("");
@@ -319,11 +340,28 @@ export default function App() {
   function handleLoadSnapshot(id: string) {
     const snap = snapshots.find((s) => s.id === id);
     if (!snap) return;
-    setCapitalEur(snap.capitalEur);
-    setEntryDate(snap.entryDate);
-    setWeights({ ...snap.weights });
-    setSelectedSymbols([...snap.selectedSymbols]);
-    setSnapshotName(snap.name);
+    applySnapshotToForm(snap);
+    setEditingSnapshotId(null);
+  }
+
+  function handleEditSnapshot(id: string) {
+    const snap = snapshots.find((s) => s.id === id);
+    if (!snap) return;
+    applySnapshotToForm(snap);
+    setEditingSnapshotId(id);
+  }
+
+  function handleCancelEditSnapshot() {
+    setEditingSnapshotId(null);
+    setSnapshotName("");
+  }
+
+  function handleRemoveSnapshot(id: string) {
+    setSnapshots((prev) => removeSnapshot(prev, id));
+    if (editingSnapshotId === id) {
+      setEditingSnapshotId(null);
+      setSnapshotName("");
+    }
   }
 
   return (
@@ -373,10 +411,13 @@ export default function App() {
         name={snapshotName}
         onNameChange={setSnapshotName}
         portfolioReady={portfolioReady}
+        editingId={editingSnapshotId}
         onSave={handleSaveSnapshot}
+        onCancelEdit={handleCancelEditSnapshot}
         rows={snapshotRows}
-        onRemove={(id) => setSnapshots((prev) => removeSnapshot(prev, id))}
+        onRemove={handleRemoveSnapshot}
         onLoad={handleLoadSnapshot}
+        onEdit={handleEditSnapshot}
       />
 
       <PortfolioSummary
