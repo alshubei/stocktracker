@@ -56,6 +56,7 @@ export function PortfolioSummary({
   const chartColor = pnlChartColor(result.totalPnlEur);
   const comparing = compareSeries.length > 0;
   const drawable = compareSeries.filter((s) => s.result != null);
+  const fxDelta = result.latestFx - result.entryFx;
 
   return (
     <section className="panel animate-[rise_0.75s_ease_both]">
@@ -64,40 +65,75 @@ export function PortfolioSummary({
           Focused: {focusLabel}
         </p>
       ) : null}
-      <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
-        <div>
-          <span className="mb-1 block text-sm text-muted">
-            {comparing ? "What-if value" : "Current value"}
-          </span>
-          <strong className="block text-[1.35rem]">
-            {formatEur(result.totalValueEur)}
-          </strong>
-          <span className="text-sm text-muted">
-            {formatUsd(result.totalValueUsd)}
-          </span>
+      <div className="mb-4">
+        <div className="mx-auto grid max-w-xl grid-cols-2 gap-6">
+          <div>
+            <span className="mb-1 block text-sm text-muted">
+              {comparing ? "What-if value" : "Current value"}
+            </span>
+            <strong className="block text-[1.35rem]">
+              {formatEur(result.totalValueEur)}
+            </strong>
+            <span className="text-sm text-muted">
+              {formatUsd(result.totalValueUsd)}
+            </span>
+          </div>
+          <div>
+            <span className="mb-1 block text-sm text-muted">
+              P&amp;L since entry
+            </span>
+            <strong
+              className={`flex items-baseline gap-2 text-[1.35rem] ${pnlClass(result.totalPnlEur)}`}
+            >
+              <span>{formatEur(result.totalPnlEur)}</span>
+              <span
+                className={`text-sm font-semibold ${pnlClass(result.totalPnlEur)}`}
+                title={
+                  result.totalPnlEur === 0
+                    ? "Flat since entry"
+                    : result.totalPnlEur > 0
+                      ? "Gain since entry"
+                      : "Loss since entry"
+                }
+                aria-label={
+                  result.totalPnlEur === 0
+                    ? "P&L flat since entry"
+                    : result.totalPnlEur > 0
+                      ? "P&L up since entry"
+                      : "P&L down since entry"
+                }
+              >
+                {result.totalPnlEur === 0
+                  ? "→"
+                  : result.totalPnlEur > 0
+                    ? "▲"
+                    : "▼"}
+              </span>
+            </strong>
+            <span className={`text-sm ${pnlClass(result.totalPnlPercent)}`}>
+              {formatPct(result.totalPnlPercent)}
+            </span>
+          </div>
         </div>
-        <div>
-          <span className="mb-1 block text-sm text-muted">
-            P&amp;L since entry
+        <p
+          className="mt-3 mb-0 text-center text-xs text-muted"
+          title={
+            fxDelta === 0
+              ? "EURUSD unchanged vs entry"
+              : fxDelta > 0
+                ? `EURUSD up vs entry ${result.entryFx.toFixed(4)}`
+                : `EURUSD down vs entry ${result.entryFx.toFixed(4)}`
+          }
+        >
+          EURUSD {result.latestFx.toFixed(4)}
+          <span className={`ml-1 font-semibold ${pnlClass(fxDelta)}`}>
+            {fxDelta === 0 ? "→" : fxDelta > 0 ? "▲" : "▼"}
           </span>
-          <strong
-            className={`block text-[1.35rem] ${pnlClass(result.totalPnlEur)}`}
-          >
-            {formatEur(result.totalPnlEur)}
-          </strong>
-          <span className={`text-sm ${pnlClass(result.totalPnlPercent)}`}>
-            {formatPct(result.totalPnlPercent)}
+          <span className="mx-1.5 text-border" aria-hidden>
+            ·
           </span>
-        </div>
-        <div>
-          <span className="mb-1 block text-sm text-muted">FX EURUSD</span>
-          <strong className="block text-[1.35rem]">
-            {result.latestFx.toFixed(4)}
-          </strong>
-          <span className="text-sm text-muted">
-            entry {result.entryFx.toFixed(4)}
-          </span>
-        </div>
+          entry {result.entryFx.toFixed(4)}
+        </p>
       </div>
 
       <div className="min-h-[280px] w-full">
@@ -120,7 +156,10 @@ export function PortfolioSummary({
                   }).format(v)
                 }
               />
-              <Tooltip content={<CompareChartTooltip series={drawable} />} />
+              <Tooltip
+                content={<CompareChartTooltip series={drawable} />}
+                wrapperStyle={{ pointerEvents: "auto", outline: "none" }}
+              />
               <Legend
                 wrapperStyle={{ fontSize: 12, color: "#93a59b" }}
                 formatter={(value) => {
@@ -176,7 +215,10 @@ export function PortfolioSummary({
                   }).format(v)
                 }
               />
-              <Tooltip content={<ChartTooltip />} />
+              <Tooltip
+                content={<ChartTooltip />}
+                wrapperStyle={{ pointerEvents: "auto", outline: "none" }}
+              />
               <Area
                 type="monotone"
                 dataKey="valueEur"

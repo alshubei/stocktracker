@@ -2,6 +2,8 @@
 
 ## 11.10.2026 — 2026-11-10
 
+- Chart hover panel scrolls when many tickers or snapshots are listed.
+- Summary centers Current value and P&L; EURUSD sits as a quiet line under them with a green/red arrow vs entry.
 - Snapshots: save up to 5 named portfolios (capital, entry date, tickers, weights). Locked curves compare to the live what-if on the chart; stored in localStorage.
 - Removed Pre-crash / Dip / Rebound / Today preset entry cards for this phase.
 - UI: tool-style header with a short how-to line (no eyebrow/marketing pitch), flat background, quieter panels, plain Stock/ETF labels.

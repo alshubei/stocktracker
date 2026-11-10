@@ -38,20 +38,22 @@ export function CompareChartTooltip({
   if (rows.length === 0) return null;
 
   return (
-    <div className="min-w-[180px] rounded-lg border border-border bg-panel px-3 py-2 text-sm text-ink">
-      <div className="mb-2 text-muted">{String(label ?? "")}</div>
-      <ul className="m-0 list-none space-y-1.5 p-0">
+    <div className="flex max-h-[min(240px,45vh)] min-w-[180px] max-w-[280px] flex-col rounded-lg border border-border bg-panel text-sm text-ink">
+      <div className="shrink-0 border-b border-border px-3 py-2 text-muted">
+        {String(label ?? "")}
+      </div>
+      <ul className="m-0 list-none space-y-1.5 overflow-y-auto overscroll-contain px-3 py-2">
         {rows.map((row) => (
           <li key={row.id} className="flex items-center justify-between gap-4">
-            <span className="inline-flex items-center gap-2">
+            <span className="inline-flex min-w-0 items-center gap-2">
               <span
-                className="size-2 rounded-full"
+                className="size-2 shrink-0 rounded-full"
                 style={{ background: row.color }}
                 aria-hidden
               />
-              <span>{row.label}</span>
+              <span className="truncate">{row.label}</span>
             </span>
-            <span className="font-semibold tabular-nums">
+            <span className="shrink-0 font-semibold tabular-nums">
               {formatEur(row.value)}
             </span>
           </li>
