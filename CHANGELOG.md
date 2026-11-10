@@ -2,6 +2,7 @@
 
 ## 11.10.2026 — 2026-11-10
 
+- Favicon: dark tile with a blue what-if curve and amber tip.
 - P&L uses calm blue / warm amber instead of traffic-light green/red; “Chart in ●● ?” badge explains why.
 - Mobile chart uses edge space: full-bleed plot, thinner axes, less panel padding.
 - Mobile layout no longer overflows the viewport (min-width/grid overflow fixes).
