@@ -38,3 +38,10 @@ export function pnlClass(value: number): string {
   if (value < 0) return "text-neg";
   return "text-muted";
 }
+
+/** Chart stroke/fill hex aligned with --color-pos / --color-neg / --color-muted. */
+export function pnlChartColor(value: number): string {
+  if (value > 0) return "#3dba8a";
+  if (value < 0) return "#e07a6a";
+  return "#93a59b";
+}

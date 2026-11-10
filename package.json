@@ -10,7 +10,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.node.json",
-    "test": "tsx --test src/lib/portfolio.test.ts",
+    "test": "tsx --test src/lib/*.test.ts",
     "verify": "yarn typecheck && yarn test"
   },
   "dependencies": {

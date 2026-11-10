@@ -8,7 +8,13 @@ import {
   YAxis,
 } from "recharts";
 import type { PortfolioResult } from "../lib/portfolio.ts";
-import { formatEur, formatPct, formatUsd, pnlClass } from "../lib/format.ts";
+import {
+  formatEur,
+  formatPct,
+  formatUsd,
+  pnlChartColor,
+  pnlClass,
+} from "../lib/format.ts";
 
 type PortfolioSummaryProps = {
   result: PortfolioResult | null;
@@ -28,6 +34,8 @@ export function PortfolioSummary({
       </section>
     );
   }
+
+  const chartColor = pnlChartColor(result.totalPnlEur);
 
   return (
     <section className="panel animate-[rise_0.75s_ease_both]">
@@ -75,8 +83,8 @@ export function PortfolioSummary({
           <AreaChart data={result.valueSeries}>
             <defs>
               <linearGradient id="valueFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3dba8a" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#3dba8a" stopOpacity={0.02} />
+                <stop offset="0%" stopColor={chartColor} stopOpacity={0.35} />
+                <stop offset="100%" stopColor={chartColor} stopOpacity={0.02} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="#2a3831" vertical={false} />
@@ -107,7 +115,7 @@ export function PortfolioSummary({
             <Area
               type="monotone"
               dataKey="valueEur"
-              stroke="#3dba8a"
+              stroke={chartColor}
               fill="url(#valueFill)"
               strokeWidth={2}
               isAnimationActive
