@@ -112,7 +112,7 @@ export function TopBar({
         </label>
         <button
           type="button"
-          className="btn-primary col-span-2 w-full sm:col-span-1 sm:w-auto"
+          className="col-span-2 justify-self-end text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline disabled:pointer-events-none disabled:opacity-40 sm:btn-primary sm:col-span-1 sm:w-auto sm:justify-self-auto sm:text-sm sm:no-underline sm:hover:no-underline"
           onClick={onRefresh}
           disabled={loading}
         >

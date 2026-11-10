@@ -35,10 +35,8 @@ export function TickerFocus({
 }: TickerFocusProps) {
   const [query, setQuery] = useState("");
   const [hintOpen, setHintOpen] = useState(false);
-  // Mobile: collapsed when a selection already exists so the chart stays first.
-  const [mobileOpen, setMobileOpen] = useState(
-    () => selectedSymbols.length === 0,
-  );
+  // Mobile starts open so tickers come before the chart outcome.
+  const [mobileOpen, setMobileOpen] = useState(true);
   const hintId = useId();
   const bodyId = useId();
   const selected = useMemo(() => new Set(selectedSymbols), [selectedSymbols]);

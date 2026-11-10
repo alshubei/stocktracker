@@ -2,6 +2,7 @@
 
 ## 11.10.2026 — 2026-11-10
 
+- Mobile: Focus above the chart; Refresh is a small link (ghost button from sm up).
 - Vercel hosts Yahoo `/api` routes so production charts load like localhost.
 - Offline-friendly: missing market API no longer shows a JSON error; Focus/list stay usable.
 - Favicon: dark tile with a blue what-if curve and amber tip.

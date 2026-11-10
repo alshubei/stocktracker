@@ -410,16 +410,8 @@ export default function App() {
       ) : null}
 
       <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start">
-        {/* Mobile: chart → Focus/save → snapshots/positions. Desktop: sticky inputs | chart stack */}
-        <div className="order-1 min-w-0 lg:col-start-2 lg:row-start-1">
-          <PortfolioSummary
-            result={activeResult}
-            compareSeries={compareSeries}
-            compareData={compareData}
-          />
-        </div>
-
-        <div className="order-2 grid min-w-0 gap-5 self-start lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-1.5rem)] lg:overflow-y-auto lg:pb-2">
+        {/* Mobile: Focus first, then chart. Desktop: sticky inputs | chart stack */}
+        <div className="order-1 grid min-w-0 gap-5 self-start lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-1.5rem)] lg:overflow-y-auto lg:pb-2">
           <TickerFocus
             universe={UNIVERSE}
             selectedSymbols={selectedSymbols}
@@ -440,6 +432,14 @@ export default function App() {
             snapshotCount={snapshots.length}
             onSave={handleSaveSnapshot}
             onCancelEdit={handleCancelEditSnapshot}
+          />
+        </div>
+
+        <div className="order-2 min-w-0 lg:col-start-2 lg:row-start-1">
+          <PortfolioSummary
+            result={activeResult}
+            compareSeries={compareSeries}
+            compareData={compareData}
           />
         </div>
 
