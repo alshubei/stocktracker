@@ -74,4 +74,47 @@ describe("computePortfolio", () => {
     assert.ok(Math.abs(result.totalPnlPercent - 7.8) < 1e-9);
     assert.equal(result.valueSeries.length, 2);
   });
+
+  it("embeds entry, hover, and latest USD prices on valueSeries points", () => {
+    const result = computePortfolio({
+      capitalEur: 1000,
+      entryDate: "2025-04-01",
+      asOfDate: "2025-04-10",
+      positions: [
+        { symbol: "AAA", weightPercent: 60 },
+        { symbol: "BBB", weightPercent: 40 },
+      ],
+      priceSeriesBySymbol: {
+        AAA: [
+          { date: "2025-04-01", close: 100 },
+          { date: "2025-04-05", close: 105 },
+          { date: "2025-04-10", close: 110 },
+        ],
+        BBB: [
+          { date: "2025-04-01", close: 50 },
+          { date: "2025-04-05", close: 45 },
+          { date: "2025-04-10", close: 40 },
+        ],
+      },
+      fxSeries: [
+        { date: "2025-04-01", close: 1.1 },
+        { date: "2025-04-05", close: 1.05 },
+        { date: "2025-04-10", close: 1.0 },
+      ],
+    });
+
+    const mid = result.valueSeries.find((p) => p.date === "2025-04-05");
+    assert.ok(mid);
+    assert.deepEqual(mid.tickers, [
+      { symbol: "AAA", entryUsd: 100, hoverUsd: 105, latestUsd: 110 },
+      { symbol: "BBB", entryUsd: 50, hoverUsd: 45, latestUsd: 40 },
+    ]);
+
+    const last = result.valueSeries[result.valueSeries.length - 1]!;
+    assert.equal(last.date, "2025-04-10");
+    assert.deepEqual(last.tickers, [
+      { symbol: "AAA", entryUsd: 100, hoverUsd: 110, latestUsd: 110 },
+      { symbol: "BBB", entryUsd: 50, hoverUsd: 40, latestUsd: 40 },
+    ]);
+  });
 });

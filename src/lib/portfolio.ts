@@ -24,6 +24,19 @@ export type PositionResult = {
   pnlPercent: number;
 };
 
+export type ValueSeriesTicker = {
+  symbol: string;
+  entryUsd: number;
+  hoverUsd: number;
+  latestUsd: number;
+};
+
+export type ValueSeriesPoint = {
+  date: string;
+  valueEur: number;
+  tickers: ValueSeriesTicker[];
+};
+
 export type PortfolioResult = {
   entryDate: string;
   asOfDate: string;
@@ -36,7 +49,7 @@ export type PortfolioResult = {
   totalPnlPercent: number;
   positions: PositionResult[];
   /** Daily portfolio EUR value from entry → as-of (inclusive when data exists). */
-  valueSeries: Array<{ date: string; valueEur: number }>;
+  valueSeries: ValueSeriesPoint[];
 };
 
 export function weightSum(weights: Record<string, number>): number {
@@ -111,6 +124,8 @@ export function computePortfolio(args: {
     symbol: string;
     shares: number;
     series: PricePoint[];
+    entryUsd: number;
+    latestUsd: number;
   }> = [];
 
   for (const position of positions) {
@@ -146,7 +161,13 @@ export function computePortfolio(args: {
       pnlPercent,
     });
 
-    holdings.push({ symbol: position.symbol, shares, series });
+    holdings.push({
+      symbol: position.symbol,
+      shares,
+      series,
+      entryUsd: entryPrice.close,
+      latestUsd: latestPrice.close,
+    });
   }
 
   const investedWeight = positionResults.reduce(
@@ -179,7 +200,7 @@ export function computePortfolio(args: {
   }
 
   const dates = [...dateSet].sort();
-  const valueSeries: Array<{ date: string; valueEur: number }> = [];
+  const valueSeries: ValueSeriesPoint[] = [];
 
   for (const date of dates) {
     const fx = closeOnOrBefore(fxSorted, date);
@@ -187,6 +208,7 @@ export function computePortfolio(args: {
 
     let usd = 0;
     let ok = true;
+    const tickers: ValueSeriesTicker[] = [];
     for (const holding of holdings) {
       const px = closeForEntry(holding.series, date);
       if (!px) {
@@ -197,12 +219,24 @@ export function computePortfolio(args: {
       if (px.date > date) {
         const sleeve = positionResults.find((p) => p.symbol === holding.symbol);
         usd += (sleeve?.eurAllocated ?? 0) * fx.close;
+        tickers.push({
+          symbol: holding.symbol,
+          entryUsd: holding.entryUsd,
+          hoverUsd: holding.entryUsd,
+          latestUsd: holding.latestUsd,
+        });
         continue;
       }
       usd += holding.shares * px.close;
+      tickers.push({
+        symbol: holding.symbol,
+        entryUsd: holding.entryUsd,
+        hoverUsd: px.close,
+        latestUsd: holding.latestUsd,
+      });
     }
     if (!ok) continue;
-    valueSeries.push({ date, valueEur: usd / fx.close + cashEur });
+    valueSeries.push({ date, valueEur: usd / fx.close + cashEur, tickers });
   }
 
   return {
