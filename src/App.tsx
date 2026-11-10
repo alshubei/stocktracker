@@ -6,6 +6,7 @@ import {
 } from "./components/PresetStrip.tsx";
 import { PositionsTable } from "./components/PositionsTable.tsx";
 import { TickerFocus } from "./components/TickerFocus.tsx";
+import { SiteFooter } from "./components/SiteFooter.tsx";
 import { TopBar } from "./components/TopBar.tsx";
 import {
   PRESET_SCENARIOS,
@@ -271,6 +272,8 @@ export default function App() {
         }}
         onEqualSplit={() => setWeights(equalWeights())}
       />
+
+      <SiteFooter />
     </div>
   );
 }

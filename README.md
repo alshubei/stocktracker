@@ -1,6 +1,8 @@
 # Stocktracker
 
-Local what-if portfolio tracker: pick an entry date and custom weights, then see what a fixed euro investment would be worth now across hardcoded tickers.
+Private what-if portfolio tracker by **Mokhtar Al-Shubei** (`alshubei83@gmail.com`).
+
+You pick a capital (e.g. €1,000), an entry date, and weights; the app shows what that virtual buy would be worth now across a hardcoded ticker universe. Not investment advice; no live brokerage.
 
 ## Stack
 

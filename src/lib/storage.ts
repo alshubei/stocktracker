@@ -5,6 +5,7 @@ import {
 } from "../config/universe.ts";
 
 const STORAGE_KEY = "stocktracker:v1";
+const STORAGE_VERSION = 2;
 
 export type StoredConfig = {
   capitalEur: number;
@@ -12,10 +13,28 @@ export type StoredConfig = {
   entryDate: string;
   /** Selected symbols for concentration; empty means none selected. */
   selectedSymbols: string[];
+  /** Bumps when defaults that should migrate change. */
+  version?: number;
 };
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+/** Calendar days before `from` (UTC date), formatted YYYY-MM-DD. */
+export function daysAgoIso(
+  days: number,
+  from: Date = new Date(),
+): string {
+  const d = new Date(
+    Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()),
+  );
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+export function defaultEntryDate(from: Date = new Date()): string {
+  return daysAgoIso(5, from);
 }
 
 export function allSymbols(): string[] {
@@ -26,8 +45,9 @@ export function defaultConfig(): StoredConfig {
   return {
     capitalEur: DEFAULT_CAPITAL_EUR,
     weights: equalWeights(),
-    entryDate: "2025-04-07",
+    entryDate: defaultEntryDate(),
     selectedSymbols: allSymbols(),
+    version: STORAGE_VERSION,
   };
 }
 
@@ -65,18 +85,26 @@ export function loadConfig(): StoredConfig {
       selectedSymbols = [parsed.focusSymbol];
     }
 
+    const storedVersion =
+      typeof parsed.version === "number" ? parsed.version : 0;
+    const shouldRefreshEntryDate = storedVersion < STORAGE_VERSION;
+
+    const entryDate = shouldRefreshEntryDate
+      ? defaults.entryDate
+      : typeof parsed.entryDate === "string" &&
+          /^\d{4}-\d{2}-\d{2}$/.test(parsed.entryDate)
+        ? parsed.entryDate
+        : defaults.entryDate;
+
     return {
       capitalEur:
         typeof parsed.capitalEur === "number" && parsed.capitalEur > 0
           ? parsed.capitalEur
           : defaults.capitalEur,
       weights,
-      entryDate:
-        typeof parsed.entryDate === "string" &&
-        /^\d{4}-\d{2}-\d{2}$/.test(parsed.entryDate)
-          ? parsed.entryDate
-          : defaults.entryDate,
+      entryDate,
       selectedSymbols,
+      version: STORAGE_VERSION,
     };
   } catch {
     return defaultConfig();
@@ -84,7 +112,10 @@ export function loadConfig(): StoredConfig {
 }
 
 export function saveConfig(config: StoredConfig): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({ ...config, version: STORAGE_VERSION }),
+  );
 }
 
 export { todayIso };
