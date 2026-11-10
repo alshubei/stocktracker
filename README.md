@@ -33,3 +33,7 @@ yarn dev
 ## Config
 
 Edit `src/config/universe.ts` for tickers and default weights.
+
+## Deploy (Vercel)
+
+Static UI + serverless `/api/*` (same Yahoo proxy as local Express). On the free Hobby plan this is normally covered by included serverless invocations — no separate Yahoo fee. Local `yarn dev` still uses Express on `:8787`.
