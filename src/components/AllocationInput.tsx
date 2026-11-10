@@ -26,6 +26,16 @@ function formatCommitted(
   return String(weightPercent);
 }
 
+function parseFieldValue(raw: string): number | null {
+  const trimmed = raw.trim();
+  if (trimmed === "" || trimmed === "-" || trimmed === "." || trimmed === ",") {
+    return 0;
+  }
+  const normalized = trimmed.replace(",", ".");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function AllocationInput({
   symbol,
   weightPercent,
@@ -48,10 +58,18 @@ export function AllocationInput({
   }, [mode, capitalEur]);
 
   function commitDraft(raw: string) {
-    const parsed = Number(raw);
-    const value = Number.isFinite(parsed) ? parsed : 0;
-    onCommit(symbol, value);
+    const value = parseFieldValue(raw);
+    if (value !== null) onCommit(symbol, value);
     setDraft(null);
+  }
+
+  function handleChange(raw: string) {
+    setDraft(raw);
+    // € mode: rebalance other selected tickers equally while typing.
+    // % mode: keep draft local until blur/Enter (must sum to 100% manually).
+    if (!isEur) return;
+    const value = parseFieldValue(raw);
+    if (value !== null) onCommit(symbol, value);
   }
 
   return (
@@ -72,7 +90,7 @@ export function AllocationInput({
         inputMode="decimal"
         value={editing ? draft : committed}
         onFocus={() => setDraft(committed)}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         onBlur={() => {
           if (draft !== null) commitDraft(draft);
         }}
