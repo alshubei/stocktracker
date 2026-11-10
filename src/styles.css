@@ -12,8 +12,9 @@
   --color-muted: #93a59b;
   --color-accent: #3dba8a;
   --color-gold: #c9a227;
-  --color-pos: #3dba8a;
-  --color-neg: #e07a6a;
+  /* P&L: calm blue / warm amber — not traffic-light green/red */
+  --color-pos: #6b9fd4;
+  --color-neg: #d4a05a;
   --color-warn: #e0b35a;
   --color-grid: #2a3831;
   --color-stock: #3d7aba;

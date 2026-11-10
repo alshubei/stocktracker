@@ -6,7 +6,7 @@ export const WHAT_IF_SERIES_ID = "what-if";
 export const SNAPSHOT_COLORS = [
   "#5b8def",
   "#e0b35a",
-  "#e07a6a",
+  "#8b7ec8",
   "#b07cc6",
   "#6ec1b0",
 ] as const;

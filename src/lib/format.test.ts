@@ -3,15 +3,15 @@ import assert from "node:assert/strict";
 import { pnlChartColor } from "./format.ts";
 
 describe("pnlChartColor", () => {
-  it("returns green for positive P&L", () => {
-    assert.equal(pnlChartColor(12.5), "#3dba8a");
+  it("returns blue for positive P&L", () => {
+    assert.equal(pnlChartColor(12.5), "#6b9fd4");
   });
 
-  it("returns red for negative P&L", () => {
-    assert.equal(pnlChartColor(-3.2), "#e07a6a");
+  it("returns amber for negative P&L", () => {
+    assert.equal(pnlChartColor(-3.2), "#d4a05a");
   });
 
-  it("returns muted green-gray for flat P&L", () => {
+  it("returns muted gray for flat P&L", () => {
     assert.equal(pnlChartColor(0), "#93a59b");
   });
 });
