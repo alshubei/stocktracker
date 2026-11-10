@@ -1,15 +1,5 @@
 {
-  "version": 2,
   "buildCommand": "yarn build",
   "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ],
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs22.x",
-      "includeFiles": "server/**"
-    }
-  }
+  "framework": "vite"
 }
