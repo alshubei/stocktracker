@@ -2,6 +2,7 @@
 
 ## 11.10.2026 — 2026-11-10
 
+- Focus ticker list uses compact one-line rows instead of large cards.
 - Saving a snapshot with an empty name shows an error to write a name.
 - Snapshots help text opens under an info icon (slide), not as always-visible copy.
 - Chart hover panel scrolls when many tickers or snapshots are listed.

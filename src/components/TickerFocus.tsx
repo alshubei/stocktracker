@@ -82,7 +82,11 @@ export function TickerFocus({
         </label>
       </div>
 
-      <div className="flex flex-wrap gap-2.5" role="group" aria-label="Tickers">
+      <div
+        className="grid gap-1 sm:grid-cols-2"
+        role="group"
+        aria-label="Tickers"
+      >
         {filtered.map((ticker) => {
           const active = selected.has(ticker.symbol);
           const id = `ticker-check-${ticker.symbol}`;
@@ -90,29 +94,31 @@ export function TickerFocus({
             <label
               key={ticker.symbol}
               htmlFor={id}
-              className={`grid min-w-[10.5rem] cursor-pointer grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5 rounded-lg border bg-bg0 px-3 py-2.5 ${
+              className={`flex min-w-0 cursor-pointer items-center gap-2 rounded-md border bg-bg0 px-2 py-1.5 text-sm ${
                 active ? "border-accent" : "border-border"
               }`}
             >
               <input
                 id={id}
-                className="check-input row-span-3 self-center"
+                className="check-input shrink-0"
                 type="checkbox"
                 checked={active}
                 onChange={() => toggleSymbol(ticker.symbol)}
               />
-              <span className="font-semibold tracking-wide">
+              <span className="shrink-0 font-semibold tracking-wide">
                 {ticker.symbol}
               </span>
-              <KindBadge kind={ticker.kind} />
-              <span className="max-w-[11rem] truncate text-xs text-muted">
+              <span className="min-w-0 flex-1 truncate text-xs text-muted">
                 {ticker.name}
               </span>
+              <KindBadge kind={ticker.kind} />
             </label>
           );
         })}
         {filtered.length === 0 ? (
-          <span className="text-muted">No tickers match “{query}”.</span>
+          <span className="text-muted sm:col-span-2">
+            No tickers match “{query}”.
+          </span>
         ) : null}
       </div>
 
