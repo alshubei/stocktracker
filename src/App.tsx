@@ -138,15 +138,21 @@ export default function App() {
       );
       setAsOfDate(to);
       setMarket({
-        ...data,
+        priceSeriesBySymbol: data.priceSeriesBySymbol,
+        fxSeries: data.fxSeries,
+        errors: data.online ? data.errors : {},
         fetchedFrom: from,
         fetchedTo: to,
       });
-      if (Object.keys(data.errors).length === UNIVERSE.length) {
-        setError("Could not load any ticker history from Yahoo.");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load market data");
+      // Offline / missing proxy: stay quiet so Focus + snapshots remain usable.
+    } catch {
+      setMarket({
+        priceSeriesBySymbol: {},
+        fxSeries: [],
+        errors: {},
+        fetchedFrom: from,
+        fetchedTo: to,
+      });
     } finally {
       setLoading(false);
     }

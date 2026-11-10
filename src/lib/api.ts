@@ -7,13 +7,20 @@ type SeriesResponse = {
   points: PricePoint[];
 };
 
-async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(url);
-  const body = (await response.json()) as T & { error?: string };
-  if (!response.ok) {
-    throw new Error(body.error ?? `Request failed: ${response.status}`);
+/** Parse JSON when possible; missing/HTML API pages return null (offline-friendly). */
+async function getJsonOrNull<T>(url: string): Promise<T | null> {
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    if (!response.ok) return null;
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      return null;
+    }
+  } catch {
+    return null;
   }
-  return body;
 }
 
 export async function fetchHistory(
@@ -21,20 +28,20 @@ export async function fetchHistory(
   from: string,
   to: string,
 ): Promise<PricePoint[]> {
-  const data = await getJson<SeriesResponse>(
+  const data = await getJsonOrNull<SeriesResponse>(
     `/api/history?symbol=${encodeURIComponent(symbol)}&from=${from}&to=${to}`,
   );
-  return data.points;
+  return data?.points ?? [];
 }
 
 export async function fetchEurUsd(
   from: string,
   to: string,
 ): Promise<PricePoint[]> {
-  const data = await getJson<SeriesResponse>(
+  const data = await getJsonOrNull<SeriesResponse>(
     `/api/fx/eurusd?from=${from}&to=${to}`,
   );
-  return data.points;
+  return data?.points ?? [];
 }
 
 export async function fetchUniverseSeries(
@@ -45,30 +52,30 @@ export async function fetchUniverseSeries(
   priceSeriesBySymbol: Record<string, PricePoint[]>;
   fxSeries: PricePoint[];
   errors: Record<string, string>;
+  /** True when the market proxy answered with usable data for at least one series. */
+  online: boolean;
 }> {
   const errors: Record<string, string> = {};
   const priceSeriesBySymbol: Record<string, PricePoint[]> = {};
 
   const results = await Promise.all(
     symbols.map(async (symbol) => {
-      try {
-        const points = await fetchHistory(symbol, from, to);
-        return { symbol, points, error: null as string | null };
-      } catch (error) {
-        return {
-          symbol,
-          points: [] as PricePoint[],
-          error: error instanceof Error ? error.message : "Failed",
-        };
-      }
+      const points = await fetchHistory(symbol, from, to);
+      return { symbol, points };
     }),
   );
 
   for (const result of results) {
-    if (result.error) errors[result.symbol] = result.error;
-    else priceSeriesBySymbol[result.symbol] = result.points;
+    if (result.points.length === 0) {
+      errors[result.symbol] = "Unavailable offline";
+    } else {
+      priceSeriesBySymbol[result.symbol] = result.points;
+    }
   }
 
   const fxSeries = await fetchEurUsd(from, to);
-  return { priceSeriesBySymbol, fxSeries, errors };
+  const online =
+    Object.keys(priceSeriesBySymbol).length > 0 || fxSeries.length > 0;
+
+  return { priceSeriesBySymbol, fxSeries, errors, online };
 }

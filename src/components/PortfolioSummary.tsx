@@ -54,7 +54,8 @@ export function PortfolioSummary({
     return (
       <section className="panel min-w-0 animate-[rise_0.75s_ease_both]">
         <p className="m-0 text-muted">
-          Load market data to see portfolio summary.
+          Chart waits for market data. You can still set Focus, weights, and
+          snapshots offline.
         </p>
       </section>
     );
