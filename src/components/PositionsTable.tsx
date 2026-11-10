@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import type { Ticker } from "../config/universe.ts";
 import { matchesTickerQuery } from "../config/universe.ts";
+import type { WeightInputMode } from "../lib/allocation-input.ts";
+import { weightToEur } from "../lib/allocation-input.ts";
 import type { PositionResult } from "../lib/portfolio.ts";
 import {
   formatEur,
@@ -9,7 +11,9 @@ import {
   formatUsd,
   pnlClass,
 } from "../lib/format.ts";
+import { AllocationInput } from "./AllocationInput.tsx";
 import { KindBadge } from "./KindBadge.tsx";
+import { WeightInputModeToggle } from "./WeightInputModeToggle.tsx";
 
 type PositionsTableProps = {
   universe: Ticker[];
@@ -17,10 +21,13 @@ type PositionsTableProps = {
   positions: PositionResult[] | null;
   weightSum: number;
   weightsValid: boolean;
+  capitalEur: number;
+  weightInputMode: WeightInputMode;
+  onWeightInputModeChange: (mode: WeightInputMode) => void;
   errors: Record<string, string>;
   selectedSymbols: string[];
   onSelectedChange: (symbols: string[]) => void;
-  onWeightChange: (symbol: string, weight: number) => void;
+  onAllocationCommit: (symbol: string, value: number) => void;
   onEqualSplit: () => void;
 };
 
@@ -30,15 +37,20 @@ export function PositionsTable({
   positions,
   weightSum,
   weightsValid,
+  capitalEur,
+  weightInputMode,
+  onWeightInputModeChange,
   errors,
   selectedSymbols,
   onSelectedChange,
-  onWeightChange,
+  onAllocationCommit,
   onEqualSplit,
 }: PositionsTableProps) {
   const [query, setQuery] = useState("");
   const bySymbol = new Map(positions?.map((p) => [p.symbol, p]) ?? []);
   const selected = useMemo(() => new Set(selectedSymbols), [selectedSymbols]);
+  const isPartialSelection =
+    selectedSymbols.length > 0 && selectedSymbols.length < universe.length;
 
   const visible = useMemo(() => {
     const matched = universe.filter((t) => matchesTickerQuery(t, query));
@@ -60,8 +72,6 @@ export function PositionsTable({
   const allSelected =
     allSymbols.length > 0 && allSymbols.every((s) => selected.has(s));
   const someSelected = selectedSymbols.length > 0 && !allSelected;
-  const isPartialSelection =
-    selectedSymbols.length > 0 && selectedSymbols.length < universe.length;
 
   function toggleSymbol(symbol: string) {
     if (selected.has(symbol)) {
@@ -80,6 +90,20 @@ export function PositionsTable({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
         <h2 className="m-0 font-serif text-xl font-semibold">Positions</h2>
         <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              className="text-xs font-medium text-muted underline-offset-2 hover:text-ink hover:underline disabled:pointer-events-none disabled:opacity-40"
+              onClick={onEqualSplit}
+              disabled={selectedSymbols.length === 0}
+            >
+              Reset equally
+            </button>
+            <WeightInputModeToggle
+              mode={weightInputMode}
+              onChange={onWeightInputModeChange}
+            />
+          </div>
           <label className="field min-w-[12rem]">
             <span className="sr-only">Filter positions</span>
             <input
@@ -91,11 +115,20 @@ export function PositionsTable({
             />
           </label>
           <span className={weightsValid ? "text-muted" : "text-warn"}>
-            Weights sum: {weightSum.toFixed(2)}%
+            {weightInputMode === "eur" ? (
+              <>
+                Allocated
+                {isPartialSelection ? " (selection)" : ""}:{" "}
+                {formatEur(weightToEur(weightSum, capitalEur))}
+              </>
+            ) : (
+              <>
+                Weights sum
+                {isPartialSelection ? " (selection)" : ""}:{" "}
+                {weightSum.toFixed(2)}%
+              </>
+            )}
           </span>
-          <button type="button" className="btn-ghost" onClick={onEqualSplit}>
-            Equal split
-          </button>
         </div>
       </div>
 
@@ -119,7 +152,7 @@ export function PositionsTable({
                 [
                   "Ticker",
                   "Type",
-                  "Weight %",
+                  weightInputMode === "eur" ? "Allocation €" : "Weight %",
                   "€ allocated",
                   "Entry $",
                   "Shares",
@@ -168,17 +201,19 @@ export function PositionsTable({
                     <KindBadge kind={ticker.kind} />
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">
-                    <input
-                      className="field-input w-[5.5rem] min-w-[5rem]"
-                      type="number"
-                      min={0}
-                      max={100}
-                      step={0.1}
-                      value={weights[ticker.symbol] ?? 0}
-                      onChange={(e) =>
-                        onWeightChange(ticker.symbol, Number(e.target.value))
-                      }
-                    />
+                    {dimmed || !isOn ? (
+                      <span className="text-muted">—</span>
+                    ) : (
+                      <AllocationInput
+                        id={`position-weight-${ticker.symbol}`}
+                        symbol={ticker.symbol}
+                        weightPercent={weights[ticker.symbol] ?? 0}
+                        capitalEur={capitalEur}
+                        mode={weightInputMode}
+                        onCommit={onAllocationCommit}
+                        className="field-input w-[5.5rem] min-w-[5rem] px-1.5 py-1 text-sm text-ink"
+                      />
+                    )}
                   </td>
                   <td className="border-b border-border px-2 py-2.5 align-top">
                     {dimmed ? "—" : row ? formatEur(row.eurAllocated) : "—"}

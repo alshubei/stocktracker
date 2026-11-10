@@ -2,6 +2,9 @@
 
 ## 11.10.2026 — 2026-11-10
 
+- € allocation: type freely, then on commit remaining capital splits equally across other selected tickers; % mode requires selected weights to sum to 100%.
+- “Reset equally” link sits left of the %·€ toggle in Focus and Positions.
+- Focus: Select all left / %·€ toggle right above tickers; allocation defaults to €.
 - What-if result sentence sticks to the bottom of the viewport while scrolling.
 - Focus ticker list uses compact one-line rows instead of large cards.
 - Saving a snapshot with an empty name shows an error to write a name.

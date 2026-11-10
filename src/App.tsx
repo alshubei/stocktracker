@@ -7,12 +7,16 @@ import { SiteFooter } from "./components/SiteFooter.tsx";
 import { TopBar } from "./components/TopBar.tsx";
 import { WhatIfResultBar } from "./components/WhatIfResultBar.tsx";
 import { UNIVERSE, equalWeights, findTicker } from "./config/universe.ts";
+import {
+  redistributeEurAllocation,
+  selectedWeightSum,
+  type WeightInputMode,
+} from "./lib/allocation-input.ts";
 import { fetchUniverseSeries } from "./lib/api.ts";
 import {
   computePortfolio,
   type PortfolioResult,
   type PricePoint,
-  weightSum,
   weightsAreValid,
 } from "./lib/portfolio.ts";
 import {
@@ -46,7 +50,7 @@ function earliestNeededDate(dates: string[]): string {
   return [...dates].sort()[0]!;
 }
 
-/** Keep relative weights among selected symbols; rescale to 100%. */
+/** Selected symbols only — weights must already sum to ~100%. */
 function positionsForSelection(
   selectedSymbols: string[],
   weights: Record<string, number>,
@@ -55,20 +59,15 @@ function positionsForSelection(
   const chosen = selectedSymbols.filter((s) => priced.has(s));
   if (chosen.length === 0) return null;
 
-  const raw = chosen.map((symbol) => ({
-    symbol,
-    weightPercent: weights[symbol] ?? 0,
-  }));
-  const rawSum = raw.reduce((s, p) => s + p.weightPercent, 0);
-
-  if (rawSum <= 0) {
-    const equal = 100 / raw.length;
-    return raw.map((p) => ({ symbol: p.symbol, weightPercent: equal }));
+  const slice: Record<string, number> = {};
+  for (const symbol of chosen) {
+    slice[symbol] = weights[symbol] ?? 0;
   }
+  if (!weightsAreValid(slice)) return null;
 
-  return raw.map((p) => ({
-    symbol: p.symbol,
-    weightPercent: (p.weightPercent / rawSum) * 100,
+  return chosen.map((symbol) => ({
+    symbol,
+    weightPercent: slice[symbol]!,
   }));
 }
 
@@ -81,10 +80,11 @@ function selectionIsFull(selectedSymbols: string[]): boolean {
 
 function inputsAreWeightValid(input: PortfolioInputs): boolean {
   if (input.selectedSymbols.length === 0) return false;
-  if (selectionIsFull(input.selectedSymbols)) {
-    return weightsAreValid(input.weights);
+  const slice: Record<string, number> = {};
+  for (const symbol of input.selectedSymbols) {
+    slice[symbol] = input.weights[symbol] ?? 0;
   }
-  return true;
+  return weightsAreValid(slice);
 }
 
 export default function App() {
@@ -99,6 +99,8 @@ export default function App() {
     initial.snapshots,
   );
   const [snapshotName, setSnapshotName] = useState("");
+  const [weightInputMode, setWeightInputMode] =
+    useState<WeightInputMode>("eur");
   const [market, setMarket] = useState<MarketBundle | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -243,9 +245,8 @@ export default function App() {
     );
   }, [compareSeries]);
 
-  const sum = weightSum(weights);
   const isFullSelection = selectionIsFull(selectedSymbols);
-  const needsFullWeights = isFullSelection || selectedSymbols.length === 0;
+  const sum = selectedWeightSum(selectedSymbols, weights);
   const valid = inputsAreWeightValid(liveInput);
 
   const portfolioReady = snapshotPortfolioReady({
@@ -263,6 +264,44 @@ export default function App() {
     }
     return `${selectedSymbols.length} tickers selected`;
   }, [isFullSelection, selectedSymbols]);
+
+  function handleSelectedChange(symbols: string[]) {
+    setSelectedSymbols(symbols);
+    if (symbols.length === 0) return;
+    // Keep selection weights at 100% when the set changes.
+    setWeights((prev) => ({ ...prev, ...equalWeights(symbols) }));
+  }
+
+  function handleAllocationCommit(
+    symbol: string,
+    value: number,
+    mode: WeightInputMode = weightInputMode,
+  ) {
+    if (mode === "eur") {
+      setWeights((prev) =>
+        redistributeEurAllocation(
+          prev,
+          selectedSymbols,
+          symbol,
+          value,
+          capitalEur,
+        ),
+      );
+      return;
+    }
+    setWeights((prev) => ({
+      ...prev,
+      [symbol]: Number.isFinite(value) ? value : 0,
+    }));
+  }
+
+  function handleEqualSplit() {
+    const symbols =
+      selectedSymbols.length > 0
+        ? selectedSymbols
+        : UNIVERSE.map((t) => t.symbol);
+    setWeights((prev) => ({ ...prev, ...equalWeights(symbols) }));
+  }
 
   function handleSaveSnapshot() {
     const next = addSnapshot(snapshots, {
@@ -303,17 +342,24 @@ export default function App() {
       <TickerFocus
         universe={UNIVERSE}
         selectedSymbols={selectedSymbols}
-        onSelectedChange={setSelectedSymbols}
+        weights={weights}
+        capitalEur={capitalEur}
+        weightInputMode={weightInputMode}
+        onWeightInputModeChange={setWeightInputMode}
+        onSelectedChange={handleSelectedChange}
+        onAllocationCommit={handleAllocationCommit}
+        onEqualSplit={handleEqualSplit}
       />
 
       {selectedSymbols.length === 0 ? (
         <div className="rounded-[10px] border border-warn/50 bg-warn/12 px-4 py-3">
           Select at least one ticker to compute the what-if portfolio.
         </div>
-      ) : needsFullWeights && !weightsAreValid(weights) ? (
+      ) : !valid ? (
         <div className="rounded-[10px] border border-warn/50 bg-warn/12 px-4 py-3">
-          Weights must sum to 100% (currently {sum.toFixed(2)}%) before P&amp;L
-          is computed for the full portfolio.
+          {weightInputMode === "percent"
+            ? `Selected weights must sum to 100% (currently ${sum.toFixed(2)}%). Fix the % values — they are not auto-balanced.`
+            : `Selected weights must sum to 100% before P&L can run (currently ${sum.toFixed(2)}%). Edit a € amount to rebalance, or switch to % and fix the split.`}
         </div>
       ) : null}
 
@@ -345,16 +391,14 @@ export default function App() {
         positions={activeResult?.positions ?? null}
         weightSum={sum}
         weightsValid={valid}
+        capitalEur={capitalEur}
+        weightInputMode={weightInputMode}
+        onWeightInputModeChange={setWeightInputMode}
         errors={market?.errors ?? {}}
         selectedSymbols={selectedSymbols}
-        onSelectedChange={setSelectedSymbols}
-        onWeightChange={(symbol, weight) => {
-          setWeights((prev) => ({
-            ...prev,
-            [symbol]: Number.isFinite(weight) ? weight : 0,
-          }));
-        }}
-        onEqualSplit={() => setWeights(equalWeights())}
+        onSelectedChange={handleSelectedChange}
+        onAllocationCommit={handleAllocationCommit}
+        onEqualSplit={handleEqualSplit}
       />
 
       <SiteFooter />

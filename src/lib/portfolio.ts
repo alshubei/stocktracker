@@ -63,6 +63,41 @@ export function weightsAreValid(
   return Math.abs(weightSum(weights) - 100) <= tolerance;
 }
 
+/**
+ * Portfolio weights actually used for a Focus selection: relative stored
+ * weights among `symbols`, rescaled to 100%. One symbol → 100.
+ */
+export function effectiveWeightsAmong(
+  symbols: string[],
+  weights: Record<string, number>,
+): Record<string, number> {
+  if (symbols.length === 0) return {};
+
+  const rawSum = symbols.reduce((sum, symbol) => sum + (weights[symbol] ?? 0), 0);
+  const out: Record<string, number> = {};
+
+  if (rawSum <= 0) {
+    const n = symbols.length;
+    const base = Math.floor((100 / n) * 100) / 100;
+    let assigned = 0;
+    symbols.forEach((symbol, index) => {
+      if (index === n - 1) {
+        out[symbol] = Math.round((100 - assigned) * 100) / 100;
+      } else {
+        out[symbol] = base;
+        assigned += base;
+      }
+    });
+    return out;
+  }
+
+  for (const symbol of symbols) {
+    out[symbol] =
+      Math.round(((weights[symbol] ?? 0) / rawSum) * 100 * 100) / 100;
+  }
+  return out;
+}
+
 export function closeOnOrBefore(
   series: PricePoint[],
   date: string,

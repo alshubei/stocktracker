@@ -4,6 +4,7 @@ import {
   closeForEntry,
   closeOnOrBefore,
   computePortfolio,
+  effectiveWeightsAmong,
   weightSum,
   weightsAreValid,
 } from "./portfolio.ts";
@@ -13,6 +14,25 @@ describe("portfolio helpers", () => {
     assert.equal(weightSum({ A: 50, B: 50 }), 100);
     assert.equal(weightsAreValid({ A: 50, B: 50 }), true);
     assert.equal(weightsAreValid({ A: 40, B: 40 }), false);
+  });
+
+  it("rescales Focus selection weights to 100% (single ticker → 100)", () => {
+    assert.deepEqual(
+      effectiveWeightsAmong(["NVDA"], {
+        NVDA: 12.5,
+        AVGO: 12.5,
+        NOW: 12.5,
+      }),
+      { NVDA: 100 },
+    );
+    assert.deepEqual(
+      effectiveWeightsAmong(["NVDA", "AVGO"], {
+        NVDA: 12.5,
+        AVGO: 12.5,
+        NOW: 12.5,
+      }),
+      { NVDA: 50, AVGO: 50 },
+    );
   });
 
   it("picks previous close on non-trading day", () => {

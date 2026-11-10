@@ -5,6 +5,7 @@ import {
   type PortfolioSnapshot,
 } from "../lib/snapshots.ts";
 import { formatEur, formatPct, pnlClass } from "../lib/format.ts";
+import { InfoIcon } from "./InfoIcon.tsx";
 
 type SnapshotRow = {
   snapshot: PortfolioSnapshot;
@@ -26,25 +27,6 @@ type SnapshotsPanelProps = {
 
 const SNAPSHOT_HINT =
   "Save a named portfolio (capital, entry date, tickers, weights). It stays fixed; the form above stays a live what-if. With at least one snapshot, the chart compares those locked curves to today against your current what-if.";
-
-function InfoIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
-    </svg>
-  );
-}
 
 export function SnapshotsPanel({
   name,
