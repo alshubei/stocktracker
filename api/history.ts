@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { historyPayload, isIsoDate } from "../server/market";
+import { historyPayload, isIsoDate } from "./lib/market";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
