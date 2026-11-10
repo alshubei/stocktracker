@@ -65,8 +65,7 @@ export function TickerFocus({
             <h2 className="m-0 font-serif text-xl font-semibold">Focus</h2>
             <p className="mt-1 mb-0 max-w-xl text-sm text-muted">
               Check one or more tickers to concentrate the what-if. Capital is
-              split across the selection using relative weights. ◆ stock · ▤
-              ETF
+              split across the selection using relative weights.
             </p>
           </div>
         </div>
@@ -91,10 +90,8 @@ export function TickerFocus({
             <label
               key={ticker.symbol}
               htmlFor={id}
-              className={`grid min-w-[10.5rem] cursor-pointer grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5 rounded-[10px] border bg-bg0/55 px-3 py-2.5 ${
-                active
-                  ? "border-accent shadow-[0_0_0_1px_var(--color-accent)]"
-                  : "border-border"
+              className={`grid min-w-[10.5rem] cursor-pointer grid-cols-[auto_1fr] gap-x-2.5 gap-y-0.5 rounded-lg border bg-bg0 px-3 py-2.5 ${
+                active ? "border-accent" : "border-border"
               }`}
             >
               <input

@@ -31,10 +31,8 @@ export function PresetStrip({
           <button
             key={preset.id}
             type="button"
-            className={`grid gap-0.5 rounded-[14px] border bg-panel/92 p-4 text-left text-ink shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition hover:-translate-y-px ${
-              active
-                ? "border-accent shadow-[0_0_0_1px_var(--color-accent),0_18px_40px_rgba(0,0,0,0.28)]"
-                : "border-border"
+            className={`grid gap-0.5 rounded-lg border bg-panel p-4 text-left text-ink transition hover:border-accent/70 ${
+              active ? "border-accent" : "border-border"
             }`}
             onClick={() => onSelect(preset.entryDate)}
           >
