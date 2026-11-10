@@ -9,17 +9,7 @@ type SeriesResponse = {
 
 async function getJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
-  const text = await response.text();
-  let body: (T & { error?: string }) | null = null;
-  try {
-    body = JSON.parse(text) as T & { error?: string };
-  } catch {
-    throw new Error(
-      response.ok
-        ? "API returned non-JSON"
-        : `Market API unavailable (${response.status}). Deploy the /api Yahoo proxy on the host.`,
-    );
-  }
+  const body = (await response.json()) as T & { error?: string };
   if (!response.ok) {
     throw new Error(body.error ?? `Request failed: ${response.status}`);
   }

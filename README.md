@@ -33,7 +33,3 @@ yarn dev
 ## Config
 
 Edit `src/config/universe.ts` for tickers and default weights.
-
-## Deploy (Vercel)
-
-Static UI builds from Vite (`dist/`). Market calls need the `/api/*` serverless routes (same Yahoo proxy as local Express). Push to `main`; Vercel should pick up `vercel.json` + `/api`.
