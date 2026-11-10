@@ -4,4 +4,4 @@ export {
   getCachedCloses,
   setCachedCloses,
   type DailyClose,
-} from "../api/lib/yahoo";
+} from "../api/_lib/yahoo";

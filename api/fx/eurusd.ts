@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { FX_SYMBOL, historyPayload, isIsoDate } from "../lib/market";
+import { FX_SYMBOL, historyPayload, isIsoDate } from "../_lib/market";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") {
